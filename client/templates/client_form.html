@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>FSE-GTW Test Client</title>
+    <style>
+        .main {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            align-self: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div class="content">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" value="Submit">
+            </form>
+            {% if jwt %}
+            <div>
+                <textarea readonly cols="80" rows="20">
+    {{jwt}}
+            </textarea>
+            </div>
+            <div>
+                <div>Http Status: {{response.status_code}}</div>
+                <textarea readonly cols="80" rows="20">
+    {{response.text}}
+</textarea>
+
+            </div>
+            {%endif%}
+        </div>
+
+
+    </div>
+</body>
+
+</html>
