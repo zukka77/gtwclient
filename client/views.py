@@ -60,12 +60,13 @@ class ValidationForm(forms.Form):
     person_id=forms.CharField(initial="RSSMRA22A01A399Z^^^&amp;2.16.840.1.113883.2.9.4.3.2&amp;ISO")
     cda=forms.CharField(widget=forms.Textarea(attrs={"cols":"120","rows":"30"}),initial=cda)
 
-def make_request(data,jwt,pdf):
+def make_request(data,jwt,jwt_auth,pdf):
   VALIDATE_URI="https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1/validate-creation"
   s = requests.Session()
   s.cert = str(settings.BASE_DIR/'client_auth')
   s.headers.update({"Accept":"application/json"})
-  headers={"Authorization":"Bearer "+jwt}
+  headers={"Authorization":"Bearer "+jwt_auth}
+  headers={"FSE-JWT-Signature":jwt}
   res=s.post( VALIDATE_URI,
                   headers=headers,
                   files=[("file",("cda.pdf",pdf,"application/pdf"))],
@@ -102,9 +103,9 @@ def index(request:HttpRequest):
             }
             cert=X509.objects.get(name='sign')
             jwtGenerator=JwtGenerator(cert.key.encode('utf8'),cert.crt)
-            jwt=jwtGenerator.generate_validation_jwt(jwtData)
+            jwt,jwt_auth=jwtGenerator.generate_validation_jwt(jwtData)
             pdf=create_pdf_with_attachment(form.cleaned_data['cda'])
-            res=make_request(data,jwt,pdf)
+            res=make_request(data,jwt,jwt_auth,pdf)
             response=res          
     else:
         form=ValidationForm()
