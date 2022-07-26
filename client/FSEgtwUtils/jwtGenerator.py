@@ -21,6 +21,13 @@ class JwtData:
   person_id:str
   attachment_hash=""
 
+@dataclasses.dataclass
+class JwtAuthData:
+  sub:str
+  iss:str
+  jti=""
+
+
 class JwtGenerator:
   key:bytes
   cert:str
@@ -59,13 +66,26 @@ class JwtGenerator:
   def generate_validation_jwt(self,data:JwtData):
     nowepoch=int(time.time())
     claims=dataclasses.asdict(data)
+    claims_auth={"sub":data.sub,"iss":data.iss}
+
     claims.update({
         "iat": nowepoch,
         "nbf": nowepoch,
         "exp": nowepoch+self.exp_time_sec,
         "jti": str(uuid.uuid4()),
       })
-
+    claims_auth.update(
+      {
+        "iat": nowepoch,
+        "nbf": nowepoch,
+        "exp": nowepoch+self.exp_time_sec,
+        "jti": str(uuid.uuid4()),
+      })
+    #gestione issuer:
+    claims['iss']="integrity:S1#"+claims['iss']
+    claims_auth['iss']="auth:S1#"+claims_auth['iss']
     token=jwt.JWT(header=self.headers,claims=claims)
     token.make_signed_token(self.key)
-    return token.serialize(compact=True)
+    authToken=jwt.JWT(header=self.headers,claims=claims_auth)
+    authToken.make_signed_token(self.key)
+    return (token.serialize(compact=True),authToken.serialize(compact=True))
