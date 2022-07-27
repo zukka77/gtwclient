@@ -49,7 +49,7 @@ class ValidationForm(forms.Form):
     sub=forms.CharField(initial="PROVAX00X00X000Y")
     subject_role=forms.ChoiceField(choices=RUOLO_CHOICES)
     purpose_of_use=forms.ChoiceField(choices=[('TREATMENT','TREATMENT')])
-    iss=forms.CharField(initial="190201123456XX",disabled=True)
+    iss=forms.CharField(initial="190201234567XX",disabled=True)
     locality=forms.CharField(initial="201123456")
     subject_organization=forms.CharField(initial="Regione Emilia-Romagna")
     subject_organization_id=forms.CharField(initial="080")
@@ -61,12 +61,12 @@ class ValidationForm(forms.Form):
     cda=forms.CharField(widget=forms.Textarea(attrs={"cols":"120","rows":"30"}),initial=cda)
 
 def make_request(data,jwt,jwt_auth,pdf):
-  VALIDATE_URI="https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1/validate-creation"
+  VALIDATE_URI="https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1/documents/validation"
   s = requests.Session()
   s.cert = str(settings.BASE_DIR/'client_auth')
   s.headers.update({"Accept":"application/json"})
-  headers={"Authorization":"Bearer "+jwt_auth}
-  headers={"FSE-JWT-Signature":jwt}
+  headers={"Authorization":"Bearer "+jwt_auth,"FSE-JWT-Signature":jwt}
+  
   res=s.post( VALIDATE_URI,
                   headers=headers,
                   files=[("file",("cda.pdf",pdf,"application/pdf"))],
@@ -79,6 +79,7 @@ def make_request(data,jwt,jwt_auth,pdf):
 def index(request:HttpRequest):
     jwt=None
     response=None
+    jwt_auth=None
     if request.method=='POST':
         form=ValidationForm(request.POST)
         if form.is_valid():
@@ -109,7 +110,7 @@ def index(request:HttpRequest):
             response=res          
     else:
         form=ValidationForm()
-    return render(request,'client_form.html',context={'form':form,"jwt":jwt,"response":response})
+    return render(request,'client_form.html',context={'form':form,"jwt":jwt,"jwt_auth":jwt_auth,"response":response})
 
 
 
