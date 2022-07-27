@@ -25,6 +25,7 @@ class JwtData:
 class JwtAuthData:
   sub:str
   iss:str
+  aud:str
   jti=""
 
 
