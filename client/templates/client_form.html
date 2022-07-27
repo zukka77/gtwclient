@@ -31,8 +31,15 @@
             </form>
             {% if jwt %}
             <div>
+                jwt signature:
                 <textarea readonly cols="80" rows="20">
     {{jwt}}
+            </textarea>
+            </div>
+            <div>
+                jwt auth:
+                <textarea readonly cols="80" rows="20">
+    {{jwt_auth}}
             </textarea>
             </div>
             <div>
@@ -42,6 +49,11 @@
 </textarea>
 
             </div>
+            <div>
+                headers:
+                <textarea readonly cols="80" rows="20">
+    {{response.request.headers}}
+            </textarea>
             {%endif%}
         </div>
 
