@@ -2,14 +2,16 @@
 {% load static %}
 {% load crispy_forms_tags %}
 <html lang="en">
-  <head>
+
+<head>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'client/bootstrap-italia/css/bootstrap-italia.min.css' %}" />
-    <style>/*
+    <style>
+        /*
         .main {
             display: flex;
             flex-direction: column;
@@ -19,54 +21,68 @@
             align-self: center;
         }*/
     </style>
-  </head>
-  <body>
+</head>
+
+<body>
     <div class="d-flex p-2 flex-column m-4">
         <div class="row">
-            <div class="m-4"><h1>Test Validazione CDA</h1></div>
+            <div class="m-4">
+                <h1>Test Validazione CDA</h1>
+            </div>
             <form method="post">
                 {% csrf_token %}
-      {{form|crispy}}
-      <input class="btn btn-primary m-2" type="submit" value="Submit">
+                {{form|crispy}}
+                <input class="btn btn-primary my-2" type="submit" value="Submit">
             </form>
             {% if jwt %}
+            <div class="d-flex">
+                <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#jwt_signature" aria-expanded="false" aria-controls="jwt_signature">
+                    JWT Singature
+                </button>
+                <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#jwt_auth" aria-expanded="false" aria-controls="jwt_auth">
+                    JWT Autenticazione
+                </button>
+                <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#headers" aria-expanded="false" aria-controls="header">
+                    Header
+                </button>
+            </div>
             <div>
+                <div>Http Status: {{response.status_code}}</div>
+                <textarea readonly cols="80" rows="5">
+    {{response.text}}
+</textarea>
+
+            </div>
+            <div class="collapse" id="jwt_signature">
                 jwt signature:
                 <textarea readonly cols="80" rows="20">
     {{jwt}}
             </textarea>
             </div>
-            <div>
+            <div class="collapse" id="jwt_auth">
                 jwt auth:
                 <textarea readonly cols="80" rows="20">
     {{jwt_auth}}
             </textarea>
             </div>
-            <div>
-                <div>Http Status: {{response.status_code}}</div>
-                <textarea readonly cols="80" rows="20">
-    {{response.text}}
-</textarea>
 
-            </div>
-            <div>
+            <div class="collapse" id="headers">
                 headers:
                 <textarea readonly cols="80" rows="20">
     {{response.request.headers}}
             </textarea>
-            {%endif%}
+                {%endif%}
+            </div>
+
+
         </div>
+        <!-- JS -->
 
+        <script>
+            window.__PUBLIC_PATH__ = '{% static "client/bootstrap-italia/fonts" %}'
+        </script>
 
-    </div>
-    <!-- JS -->
-    
-    <script>
-        window.__PUBLIC_PATH__ = '{% static "client/bootstrap-italia/fonts" %}'
-    </script>
-      
-    <script src="{% static 'client/bootstrap-italia/js/bootstrap-italia.bundle.min.js' %}"></script>
-  </body>
+        <script src="{% static 'client/bootstrap-italia/js/bootstrap-italia.bundle.min.js' %}"></script>
+</body>
+
 </html>
-
-
