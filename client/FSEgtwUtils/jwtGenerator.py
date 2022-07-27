@@ -66,7 +66,7 @@ class JwtGenerator:
   def generate_validation_jwt(self,data:JwtData):
     nowepoch=int(time.time())
     claims=dataclasses.asdict(data)
-    claims_auth={"sub":data.sub,"iss":data.iss}
+    claims_auth={"sub":data.sub,"iss":data.iss,"aud":data.aud}
 
     claims.update({
         "iat": nowepoch,
