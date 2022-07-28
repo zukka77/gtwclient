@@ -7,41 +7,8 @@ import requests
 import json
 from .xml_initial import cda
 from .models import *
-TIPO_DOCUMENTO_ALTO_CHOICES=[
-('WOR', 'Documento di workflow'),
-('REF', 'Referto'),
-('LDO', 'Lettera di dimissione ospedaliera'),
-('RIC', 'Richiesta'),
-('SUM', 'Sommario' ),
-('TAC', 'Taccuino'),
-('PRS', 'Prescrizione'),
-('PRE', 'Prestazioni'),
-('ESE', 'Esenzione'),
-('PDC', 'Piano di cura' ),
-('VAC', 'Vaccino'),
-('CER', 'Certificato per DGC'),
-('VRB', 'Verbale'),
-]
-RUOLO_CHOICES=[
-('AAS ','Personale di assistenza ad alta specializzazione '),
-('APR ','MMG/PLS'),
-('PSS ','Professionista del sociale '),
-('INF ','Personale infermieristico '),
-('FAR ','Farmacista '),
-('OAM ','Operatore amministrativo '),
-('DRS ','Dirigente sanitario '),
-('RSA ','Medico RSA '),
-('MRP ','Medico Rete di Patologia '),
-('INI ','Infrastruttura Nazionale per l’Interoperabilità '),
-('MDS ','Ruolo del Ministero della Salute per la gestione del DGC '),
-]
-STRUTTURA_CHOICES=[
-'Ospedale',
-'Prevenzione',
-'Territorio',
-'SistemaTS',
-'Cittadino',
-]
+from .datasets import RUOLO_CHOICES
+
 class ValidationForm(forms.Form):
     healthDataFormat=forms.ChoiceField(choices=[('CDA','CDA')])
     mode=forms.ChoiceField(choices=[('ATTACHMENT','ATTACHMENT')])
@@ -76,7 +43,7 @@ def make_request(data,jwt,jwt_auth,pdf):
                   )
   return res
 
-def index(request:HttpRequest):
+def validation(request:HttpRequest):
     jwt=None
     response=None
     jwt_auth=None
@@ -110,7 +77,7 @@ def index(request:HttpRequest):
             response=res          
     else:
         form=ValidationForm()
-    return render(request,'client_form.html',context={'form':form,"jwt":jwt,"jwt_auth":jwt_auth,"response":response})
+    return render(request,'validation.html',context={'form':form,"jwt":jwt,"jwt_auth":jwt_auth,"response":response})
 
 
 

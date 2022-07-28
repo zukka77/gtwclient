@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="d-flex p-2 flex-column m-4">
+    <div class="row">
+        <div class="m-4">
+            <h1>Test Validazione CDA</h1>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {{form|crispy}}
+            <input class="btn btn-primary my-2" type="submit" value="Submit">
+        </form>
+        {% if jwt %}
+        <div class="d-flex">
+            <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#jwt_signature"
+                aria-expanded="false" aria-controls="jwt_signature">
+                JWT Singature
+            </button>
+            <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#jwt_auth"
+                aria-expanded="false" aria-controls="jwt_auth">
+                JWT Autenticazione
+            </button>
+            <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#headers"
+                aria-expanded="false" aria-controls="header">
+                Header
+            </button>
+        </div>
+        <div>
+            <div>Http Status: {{response.status_code}}</div>
+            <textarea readonly cols="80" rows="5">
+    {{response.text}}
+</textarea>
+
+        </div>
+        <div class="collapse" id="jwt_signature">
+            jwt signature:
+            <textarea readonly cols="80" rows="20">
+    {{jwt}}
+            </textarea>
+        </div>
+        <div class="collapse" id="jwt_auth">
+            jwt auth:
+            <textarea readonly cols="80" rows="20">
+    {{jwt_auth}}
+            </textarea>
+        </div>
+
+        <div class="collapse" id="headers">
+            headers:
+            <textarea readonly cols="80" rows="20">
+    {{response.request.headers}}
+            </textarea>
+            {%endif%}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
