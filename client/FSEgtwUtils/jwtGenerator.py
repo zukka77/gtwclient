@@ -83,8 +83,8 @@ class JwtGenerator:
         "jti": str(uuid.uuid4()),
       })
     #gestione issuer:
-    claims['iss']="integrity:S1#"+claims['iss']
-    claims_auth['iss']="auth:S1#"+claims_auth['iss']
+    claims['iss']="integrity:"+claims['iss']
+    claims_auth['iss']="auth:"+claims_auth['iss']
     token=jwt.JWT(header=self.headers,claims=claims)
     token.make_signed_token(self.key)
     authToken=jwt.JWT(header=self.headers,claims=claims_auth)
