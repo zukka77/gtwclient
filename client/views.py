@@ -8,7 +8,14 @@ import json
 from .xml_initial import cda
 from .models import *
 from .datasets import RUOLO_CHOICES
+from pathlib import Path
+from cryptography import x509
+from cryptography.x509.oid import NameOID
 
+def get_issuer():
+    crt=x509.load_pem_x509_certificate((settings.BASE_DIR/'client_sign').read_bytes())
+    iss=crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+    return iss
 class ValidationForm(forms.Form):
     healthDataFormat=forms.ChoiceField(choices=[('CDA','CDA')])
     mode=forms.ChoiceField(choices=[('ATTACHMENT','ATTACHMENT')])
@@ -16,7 +23,7 @@ class ValidationForm(forms.Form):
     sub=forms.CharField(initial="PROVAX00X00X000Y")
     subject_role=forms.ChoiceField(choices=RUOLO_CHOICES)
     purpose_of_use=forms.ChoiceField(choices=[('TREATMENT','TREATMENT')])
-    iss=forms.CharField(initial="190201234567XX",disabled=True)
+    iss=forms.CharField(initial=get_issuer(),disabled=True)
     locality=forms.CharField(initial="201123456")
     subject_organization=forms.CharField(initial="Regione Emilia-Romagna")
     subject_organization_id=forms.CharField(initial="080")
@@ -69,8 +76,11 @@ def validation(request:HttpRequest):
                 'mode':form.cleaned_data['mode'],
                 'healthDataFormat':form.cleaned_data['healthDataFormat'],
             }
-            cert=X509.objects.get(name='sign')
-            jwtGenerator=JwtGenerator(cert.key.encode('utf8'),cert.crt)
+            key=(settings.BASE_DIR/'client_sign').read_bytes()
+            cert=(settings.BASE_DIR/'client_sign').read_text()
+            certlines=cert.splitlines()
+            cert='\n'.join(certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
+            jwtGenerator=JwtGenerator(key,cert)
             jwt,jwt_auth=jwtGenerator.generate_validation_jwt(jwtData)
             pdf=create_pdf_with_attachment(form.cleaned_data['cda'])
             res=make_request(data,jwt,jwt_auth,pdf)
