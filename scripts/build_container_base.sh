@@ -15,3 +15,6 @@ buildah run $c2 -- apk add qpdf
 buildah run $c2 -- rm -rf /var/cache/apk/*
 buildah copy --from $c $c2 /venv /venv
 buildah copy --from $c $c2 /app /app
+buildah commit --rm $c2 gtw-client-base
+buildah rm $c
+
