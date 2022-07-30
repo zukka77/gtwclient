@@ -27,16 +27,18 @@ e specificando la password di importazione.
 
 # ATTENZIONE
 
-**Non esporre pubblicamente il servizio**
+<mark>**Non esporre pubblicamente il servizio**</mark>
 
 ---
 
 ## Esecuzione
 
+> Prima di poter eseguire il programma è **necessario** creare un file `settings.py` all'interno della directory `gtwclient`, è possibile modificare e/o copiare il file `gtwclient/settings-sample.py`  
+
 Ci sono 2 modalità di esecuazione del client:
 * [come progetto Django sul proprio pc](#esecuzione-locale)
 * [come container](#esecuzione-container)
-
+signal-2022-07-29-145222.jpeg
 ## Esecuzione locale
 
 È necessario python > 3.4 
