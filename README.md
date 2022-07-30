@@ -38,7 +38,6 @@ e specificando la password di importazione.
 Ci sono 2 modalità di esecuazione del client:
 * [come progetto Django sul proprio pc](#esecuzione-locale)
 * [come container](#esecuzione-container)
-signal-2022-07-29-145222.jpeg
 ## Esecuzione locale
 
 È necessario python > 3.4 
