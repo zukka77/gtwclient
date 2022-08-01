@@ -1,8 +1,8 @@
-from jwcrypto import jwk,jwt
+from jwcrypto import jwk,jwt,jws
 import dataclasses
 import uuid
 import time
-
+import json
 
 @dataclasses.dataclass
 class JwtData:
@@ -90,3 +90,17 @@ class JwtGenerator:
     authToken=jwt.JWT(header=self.headers,claims=claims_auth)
     authToken.make_signed_token(self.key)
     return (token.serialize(compact=True),authToken.serialize(compact=True))
+
+  @staticmethod
+  def verify_token(token:str)->dict['header':dict,'payload':dict]:
+    t=jws.JWS.from_jose_token(token)
+    cert=t.jose_header['x5c'][0]
+    pemcert="-----BEGIN CERTIFICATE-----\n"+'\n'.join([cert[n:n+64] for n in range(0,len(cert),64)])+"\n-----END CERTIFICATE-----\n"
+    key=jwk.JWK.from_pem(pemcert.encode('utf8'))
+    t.verify(key)
+    res={
+      "header":{k:v.decode('utf8') if type(v)==bytes else v for k,v in t.jose_header.items() },
+      "payload":json.loads(t.payload.decode('utf8')),
+     
+    }
+    return res
