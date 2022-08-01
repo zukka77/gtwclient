@@ -7,7 +7,7 @@ RUN mkdir /app
 COPY requirements.txt /app
 RUN /venv/bin/pip install -r /app/requirements.txt --no-cache-dir
 
-FROM docker.io/python:alpine as intermediate
+FROM docker.io/python:alpine
 RUN apk add qpdf
 RUN rm -rf /var/cache/apk/*
 COPY --from=base /venv /venv
