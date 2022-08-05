@@ -87,9 +87,9 @@ class JwtGenerator:
     claims_auth['iss']="auth:"+claims_auth['iss']
     token=jwt.JWT(header=self.headers,claims=claims)
     token.make_signed_token(self.key)
-    authToken=jwt.JWT(header=self.headers,claims=claims_auth)
-    authToken.make_signed_token(self.key)
-    return (token.serialize(compact=True),authToken.serialize(compact=True))
+    auth_token=jwt.JWT(header=self.headers,claims=claims_auth)
+    auth_token.make_signed_token(self.key)
+    return (token.serialize(compact=True),auth_token.serialize(compact=True))
 
   @staticmethod
   def verify_token(token:str)->dict['header':dict,'payload':dict]:

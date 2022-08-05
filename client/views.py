@@ -6,7 +6,6 @@ from django.conf import settings
 import requests
 import json
 from .xml_initial import cda
-from .models import *
 from .datasets import RUOLO_CHOICES
 from pathlib import Path
 from cryptography import x509
@@ -69,7 +68,7 @@ def validation(request: HttpRequest):
     if request.method == 'POST':
         form = ValidationForm(request.POST)
         if form.is_valid():
-            jwtData = JwtData(
+            jwt_data = JwtData(
                 action_id=form.cleaned_data['action_id'],
                 aud=form.cleaned_data['aud'],
                 iss=form.cleaned_data['iss'],
@@ -93,13 +92,13 @@ def validation(request: HttpRequest):
             certlines = cert.splitlines()
             cert = '\n'.join(
                 certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
-            jwtGenerator = JwtGenerator(key, cert)
-            jwt, jwt_auth = jwtGenerator.generate_validation_jwt(jwtData)
+            jwt_generator = JwtGenerator(key, cert)
+            jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwtData)
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
             res = make_request(data, jwt, jwt_auth, pdf)
             response = res
-            jwt_data= jwtGenerator.verify_token(jwt)
-            jwt_auth_data= jwtGenerator.verify_token(jwt_auth)
+            jwt_data= jwt_generator.verify_token(jwt)
+            jwt_auth_data= jwt_generator.verify_token(jwt_auth)
     else:
         form = ValidationForm()
     return render(request, 'validation.html',
