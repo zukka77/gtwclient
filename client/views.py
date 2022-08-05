@@ -93,7 +93,7 @@ def validation(request: HttpRequest):
             cert = '\n'.join(
                 certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
             jwt_generator = JwtGenerator(key, cert)
-            jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwtData)
+            jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
             res = make_request(data, jwt, jwt_auth, pdf)
             response = res
