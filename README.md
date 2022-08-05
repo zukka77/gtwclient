@@ -81,7 +81,33 @@ Per l'esposizione del servizio verso l'esterno è necessario:
 
 ## Esecuzione container
 
-Nel source tree è presente il Dockerfile per la generazione di un container.  
+### Pull immagine
+
+È possibile utilizzare il [package disponibile nel repository](https://github.com/zukka77/gtwclient/pkgs/container/gtwclient):
+
+1. Pull dell'immagine
+
+                docker pull ghcr.io/zukka77/gtwclient:main
+
+   oppure, nel caso si utilizzi podman
+
+                podman pull ghcr.io/zukka77/gtwclient:main
+
+2. Esecuzione del container:   
+   Per l'esecuzione è necessario passare i **certificati** al container, ciò avviene attraverso l'environment di esecuzione nelle variabili `CLIENT_AUTH` e `CLIENT_SIGN`
+
+        docker run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 ghcr.io/zukka77/gtwclient:main
+
+   o in alternativa:
+
+        podman run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 ghcr.io/zukka77/gtwclient:main
+
+   dove `client_auth` contiene i certificati di autenticazione, `client_sign` contiene i certificati di firma.  
+
+
+### Build immagine
+
+**Oppure** nel source tree è presente il Dockerfile per la generazione di un container.  
 È possibile eseguire il build con il comando:
 
         docker build . -t gtwclient:latest
@@ -100,4 +126,5 @@ o in alternativa:
         podman run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 gtwclient
 
 dove `client_auth` contiene i certificati di autenticazione, `client_sign` contiene i certificati di firma.  
+
 A questo punto sarà possibile collegarsi al client su [http://localhost:4000](http://localhost:4000)
