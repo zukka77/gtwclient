@@ -52,10 +52,10 @@ si consiglia l'utilizzo di un virtual environment
 
 - inizializzazione database (la configurazione standatd creerà un database sqlite locale):
 
-        ./management migrate
+        ./manage.py migrate
 
 - certificati:
-  - mettere il file `client_auth` contenente i certificati di autenticazione nella directory base (quella contenente **management.py**)
+  - mettere il file `client_auth` contenente i certificati di autenticazione nella directory base (quella contenente **manage.py**)
   - mettere il file `client_sign` contenente i certificati di firma nella directory base
 
 a questo punto è sufficiente avviare è possibile avviare il server di sviluppo con:
