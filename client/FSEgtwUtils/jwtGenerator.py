@@ -7,7 +7,6 @@ import json
 @dataclasses.dataclass
 class JwtData:
   sub:str
-  subject_role:str
   purpose_of_use:str
   iss:str
   locality:str
@@ -17,9 +16,11 @@ class JwtData:
   patient_consent:bool
   action_id:str
   resource_hl7_type:str
-  jti=""
+  subject_role:str
   person_id:str
-  attachment_hash=""
+  attachment_hash:str=""
+  jti:str=""
+  
 
 @dataclasses.dataclass
 class JwtAuthData:
