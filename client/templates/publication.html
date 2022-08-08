@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% block content %}
+<div class="d-flex p-2 flex-column mx-5 my-4">
+    <div class="row">
+        <div class="m-4">
+            <h1>Test Validazione CDA</h1>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {{form|crispy}}
+            <input class="btn btn-primary my-2" type="submit" value="Submit">
+        </form>
+        {% if jwt %}
+        <div id="app">
+            <div class="d-flex">
+                <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#jwt_signature"
+                    aria-expanded="false" aria-controls="jwt_signature">
+                    JWT Singature
+                </button>
+                <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#jwt_auth"
+                    aria-expanded="false" aria-controls="jwt_auth">
+                    JWT Autenticazione
+                </button>
+                <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#headers"
+                    aria-expanded="false" aria-controls="header">
+                    Header
+                </button>
+            </div>
+            <div>
+                <div>Http Status: {{response.status_code}}</div>
+                <textarea readonly cols="80" rows="5">
+                    {{response.text}}
+                </textarea>
+
+            </div>
+            <div class="collapse" id="jwt_signature">
+                <div><h2>JWT signature:</h2></div>
+                <div><h3>Headers</h3></div>
+                <div v-for="(v, k) in jwt_data.header">
+                <div><strong>[[k]]</strong></div>
+                <div>[[v]]</div>
+                </div>
+                <div><h3>Payload</h3></div>
+                <div v-for="(v, k) in jwt_data.payload">
+                <div><strong>[[k]]</strong></div>
+                <div>[[v]]</div>
+                </div>
+                <div><h3>Raw JWT signature</h3></div>
+                <textarea readonly cols="80" rows="20">
+                {{jwt}}
+                </textarea>
+            </div>
+            <div class="collapse" id="jwt_auth">
+                <div><h2>JWT auth:</h2></div>
+                <div><h3>Headers</h3></div>
+                <div v-for="(v, k) in jwt_auth_data.header">
+                    <div><strong>[[k]]</strong></div>
+                    <div>[[v]]</div>
+                </div>
+                <div><h3>Payload</h3></div>
+                <div v-for="(v, k) in jwt_auth_data.payload">
+                    <div><strong>[[k]]</strong></div>
+                    <div>[[v]]</div>
+                </div>
+                <div><h3>Raw JWT auth</h3></div>
+                <textarea readonly cols="80" rows="20">
+                {{jwt_auth}}
+                </textarea>
+            </div>
+            <div class="collapse" id="headers">
+                headers:
+                <textarea readonly cols="80" rows="20">
+                {{response.request.headers}}
+                </textarea>
+            </div>
+        </div>
+        {%endif%}
+    </div>
+   
+      
+   
+</div>
+{{jwt_data|json_script:"jwt_data"}}
+{{jwt_auth_data|json_script:"jwt_auth_data"}}
+
+<script src="{% static 'client/vue/vue.js' %}"></script>
+
+
+<script>
+  const { createApp } = Vue
+
+  const app = createApp({
+    data() {
+      return {
+        jwt_data: JSON.parse(document.getElementById('jwt_data').textContent),
+        jwt_auth_data: JSON.parse(document.getElementById('jwt_auth_data').textContent)
+      }
+    }
+  })
+  app.config.compilerOptions.delimiters = ['[[', ']]']
+  app.mount('#app')
+</script>
+
+{% endblock %}
