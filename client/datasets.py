@@ -161,3 +161,11 @@ ORGANIZZAZIONE_CHOICES=[
 ("001","[001] SASN"),
 ("999","[999] MDS"),
 ]
+
+ATTIVITA_CLINICA_CHOICES=[
+("PHR","[PHR] Personal Health Record Update"),
+("CON","[CON] Consulto"),
+("DIS","[DIS] Discharge"),
+("ERP","[ERP] Erogazione Prestazione Prenotata"),
+("Sistema TS","[Sistema TS] Documenti sistema TS" ),
+]
