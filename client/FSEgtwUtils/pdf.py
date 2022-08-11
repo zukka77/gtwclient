@@ -2,7 +2,7 @@ from fpdf import FPDF
 from pikepdf import Pdf, AttachedFileSpec
 from io import BytesIO
 
-def create_pdf(text="Test PDF"):
+def create_pdf(text="Test PDF")->str:
     pdf=FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size = 15)
@@ -23,11 +23,3 @@ def create_pdf_with_attachment(attachment:str=None,attachment_name="cda.xml",pdf
     pdfio.close()
     outpdf.seek(0)
     return outpdf
-
-
-
-if __name__=='__main__':
-    pdf=create_pdf_with_attachment("testo attachato")
-
-    with open("pdf.pdf","wb") as f:
-       f.write(pdf.read())
