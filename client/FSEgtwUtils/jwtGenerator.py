@@ -22,14 +22,6 @@ class JwtData:
   jti:str=""
   
 
-@dataclasses.dataclass
-class JwtAuthData:
-  sub:str
-  iss:str
-  aud:str
-  jti=""
-
-
 class JwtGenerator:
   key:bytes
   cert:str
@@ -39,7 +31,7 @@ class JwtGenerator:
     self.key=jwk.JWK.from_pem(key)
     self.exp_time_sec=exp_time_sec
     
-    if "BEGIN CERTIFICATE" in cert:
+    if any( x in cert for x in ["BEGIN CERTIFICATE","BEGIN PUBLIC KEY"]):
         certpem=list(map(lambda x:x.strip(),cert.splitlines()))
         cert=''.join(certpem[1:-1])
     self.cert=cert
@@ -65,7 +57,7 @@ class JwtGenerator:
         certpem=''.join(certpem[1:-1])
     return certpem
 
-  def generate_validation_jwt(self,data:JwtData):
+  def generate_validation_jwt(self,data:JwtData)->tuple[str,str]:
     nowepoch=int(time.time())
     claims=dataclasses.asdict(data)
     claims_auth={"sub":data.sub,"iss":data.iss,"aud":data.aud}
@@ -96,8 +88,12 @@ class JwtGenerator:
   def verify_token(token:str)->dict['header':dict,'payload':dict]:
     t=jws.JWS.from_jose_token(token)
     cert=t.jose_header['x5c'][0]
-    pemcert="-----BEGIN CERTIFICATE-----\n"+'\n'.join([cert[n:n+64] for n in range(0,len(cert),64)])+"\n-----END CERTIFICATE-----\n"
-    key=jwk.JWK.from_pem(pemcert.encode('utf8'))
+    try:
+      pemcert="-----BEGIN CERTIFICATE-----\n"+'\n'.join([cert[n:n+64] for n in range(0,len(cert),64)])+"\n-----END CERTIFICATE-----\n"
+      key=jwk.JWK.from_pem(pemcert.encode('utf8'))
+    except ValueError:
+      pemcert="-----BEGIN PUBLIC KEY-----\n"+'\n'.join([cert[n:n+64] for n in range(0,len(cert),64)])+"\n-----END PUBLIC KEY-----\n"
+      key=jwk.JWK.from_pem(pemcert.encode('utf8'))
     t.verify(key)
     res={
       "header":{k:v.decode('utf8') if type(v)==bytes else v for k,v in t.jose_header.items() },
