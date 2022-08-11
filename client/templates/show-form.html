@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% block content %}
+<div class="d-flex p-2 flex-column mx-5 my-4">
+    <div class="row">
+        <div class="m-4">
+            {% block header %}
+            <h1>Test</h1>
+            {% endblock %}
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {{form|crispy}}
+            <input class="btn btn-primary my-2" type="submit" value="Submit">
+        </form>
+    {% include 'show-results.html' %}
+    </div>
+   
+      
+   
+</div>
+{% endblock %}

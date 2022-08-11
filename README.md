@@ -1,6 +1,6 @@
 # FSE GTW Web Client
 Questo semplice client web, realizzato con [Django](https://www.djangoproject.com/), è utile per sperimentare velocemente le chiamate verso il Gateway FSE 2.0.  
-Al momento è possibile effettuare le chiamate di **validazione** che esegue un controllo formale sul file CDA inviato e di pubblicazione.  
+Al momento è possibile effettuare le chiamate di **validazione** che esegue un controllo formale sul file CDA inviato e di **pubblicazione**.  
 **NB** attualmente il servizio di pubblicazione è un mock up che esegue solo alcuni controlli, tra questi il fatto che il CDA sia stato precedentemente validato. Pertanto **è necessario validare il CDA prima di poterlo pubblicare**  
 Il file prima dell'invio viene iniettato all'interno di un pdf di test così come richiesto dalle specifiche.  
 
@@ -10,7 +10,7 @@ Per poter collegarsi alla piattaforma è necessario avere a disposizione la copp
 I certificati devono essere ognuno in un unico file con la chiave concatenata al certificato in formato pem.
 
         -----BEGIN PRIVATE KEY-----
-        .....
+        ......
         -----END PRIVATE KEY-----
         -----BEGIN CERTIFICATE-----
         ......
