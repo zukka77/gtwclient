@@ -136,6 +136,9 @@ def validation(request: HttpRequest):
     if request.method == 'POST':
         form = ValidationForm(request.POST)
         if form.is_valid():
+            #save data in session
+            for k in form.fields.keys():
+                request.session[k]=form.cleaned_data[k]
             jwt_data = JwtData(
                 action_id=form.cleaned_data['action_id'],
                 aud=form.cleaned_data['aud'],
@@ -168,7 +171,15 @@ def validation(request: HttpRequest):
             jwt_data= jwt_generator.verify_token(jwt)
             jwt_auth_data= jwt_generator.verify_token(jwt_auth)
     else:
-        form = ValidationForm()
+        #load session data
+        session_data={}
+        for k in ValidationForm.declared_fields.keys():
+            if request.session.get(k,False):
+                session_data[k]=request.session[k]
+        if session_data:
+            form = ValidationForm(initial=session_data)
+        else:
+            form = ValidationForm()
     return render(request, 'validation.html',
                   context={'form': form, "jwt": jwt,
                            "jwt_auth": jwt_auth,
@@ -187,6 +198,8 @@ def publication(request: HttpRequest):
     if request.method == 'POST':
         form = PublicationForm(request.POST)
         if form.is_valid():
+            for k in form.fields.keys():
+                request.session[k]=form.cleaned_data[k]
             jwt_data = JwtData(
                 action_id=form.cleaned_data['action_id'],
                 aud=form.cleaned_data['aud'],
@@ -201,7 +214,7 @@ def publication(request: HttpRequest):
                 person_id=form.cleaned_data['person_id'],
                 subject_role=form.cleaned_data['subject_role'],
             )
-            # build requestBody fro form, also convert every value to string
+            # build requestBody from form, also convert every value to string
             data = {
                 k:str(form.cleaned_data[k]) for k in form.get_body_parameters() if form.cleaned_data[k]
             }
@@ -220,7 +233,14 @@ def publication(request: HttpRequest):
             jwt_data= jwt_generator.verify_token(jwt)
             jwt_auth_data= jwt_generator.verify_token(jwt_auth)
     else:
-        form = PublicationForm()
+        session_data={}
+        for k in PublicationForm.declared_fields.keys():
+            if request.session.get(k,False):
+                session_data[k]=request.session[k]
+        if session_data:
+            form = PublicationForm(initial=session_data)
+        else:
+            form = PublicationForm()
     return render(request, 'publication.html',
                   context={'form': form, "jwt": jwt,
                            "jwt_auth": jwt_auth,
