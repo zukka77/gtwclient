@@ -2,7 +2,7 @@ from django.test import Client
 from django.urls import reverse
 from client.views import get_issuer
 from client.xml_initial import cda
-from client.datasets import RUOLO_CHOICES,STRUTTURA_CHOICES,TIPO_DOCUMENTO_ALTO_CHOICES,ATTIVITA_CLINICA_CHOICES
+from client.datasets import RUOLO_CHOICES,STRUTTURA_CHOICES,TIPO_DOCUMENTO_ALTO_CHOICES,ATTIVITA_CLINICA_CHOICES,ASSETTO_ORGNIZZATIVO_CHOICES
 from client.views import ValidationForm,PublicationForm
 from uuid import uuid4
 from datetime import datetime
