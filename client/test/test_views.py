@@ -1,4 +1,3 @@
-from client.views import *
 from django.test import Client
 from django.urls import reverse
 from client.views import get_issuer
@@ -14,7 +13,7 @@ def test_validation():
     assert response.status_code==200
 
 def test_post_validation(mocker):
-    m=mocker.patch("requests.Session")
+    #m=mocker.patch("requests.Session")
     data={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
