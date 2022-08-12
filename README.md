@@ -41,7 +41,7 @@ Ci sono 2 modalità di esecuazione del client:
 * [come container](#esecuzione-container)
 ## Esecuzione locale
 
-È necessario python > 3.4 
+È necessario python >= 3.8 
 si consiglia l'utilizzo di un virtual environment
 
         python -m venv venv
