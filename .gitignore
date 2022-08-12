@@ -4,3 +4,6 @@ __pycache__
 client_auth
 /static
 client_sign
+coverage.xml
+.coverage
+htmlcov
