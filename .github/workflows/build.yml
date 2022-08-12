@@ -16,6 +16,10 @@ jobs:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: symlink settings.py
         run: ln -s settings-sample.py gtwclient/settings.py
+      - name: create temporary certificate
+        run: openssl req -subj '/CN=TEST/' -newkey rsa:2048 -nodes -keyout key -out crt -x509 -days 365 && cat key crt > client_sign
+      - name: create static dir
+        run: mkdir static
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
