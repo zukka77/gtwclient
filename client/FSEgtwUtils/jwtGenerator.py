@@ -3,6 +3,7 @@ import dataclasses
 import uuid
 import time
 import json
+from typing import Tuple,Dict,TypedDict
 
 @dataclasses.dataclass
 class JwtData:
@@ -21,7 +22,9 @@ class JwtData:
   attachment_hash:str=""
   jti:str=""
   
-
+class VerifyResult(TypedDict):
+  header:dict
+  payload:dict  
 class JwtGenerator:
   key:bytes
   cert:str
@@ -57,7 +60,7 @@ class JwtGenerator:
         certpem=''.join(certpem[1:-1])
     return certpem
 
-  def generate_validation_jwt(self,data:JwtData)->tuple[str,str]:
+  def generate_validation_jwt(self,data:JwtData)->Tuple[str,str]:
     nowepoch=int(time.time())
     claims=dataclasses.asdict(data)
     claims_auth={"sub":data.sub,"iss":data.iss,"aud":data.aud}
@@ -85,7 +88,7 @@ class JwtGenerator:
     return (token.serialize(compact=True),auth_token.serialize(compact=True))
 
   @staticmethod
-  def verify_token(token:str)->dict['header':dict,'payload':dict]:
+  def verify_token(token:str)->VerifyResult:
     t=jws.JWS.from_jose_token(token)
     cert=t.jose_header['x5c'][0]
     try:
