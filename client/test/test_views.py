@@ -6,12 +6,15 @@ from client.datasets import RUOLO_CHOICES,STRUTTURA_CHOICES,TIPO_DOCUMENTO_ALTO_
 from client.views import ValidationForm,PublicationForm
 from uuid import uuid4
 from datetime import datetime
+import pytest
+
 
 def test_validation():
     c=Client()
     response=c.get(reverse('client_validation'))
     assert response.status_code==200
 
+@pytest.mark.django_db
 def test_post_validation(mocker):
     m=mocker.patch("requests.Session")
     data={
@@ -46,12 +49,16 @@ def test_post_validation(mocker):
     response=c.post(reverse('client_validation'),data=data
     )
     assert response.status_code==200
+    #test session
+    c.get(reverse('client_validation'))
+    assert c.session.get("healthDataFormat")=='CDA'
 
 def test_publication():
     c=Client()
     response=c.get(reverse('client_publication'))
     assert response.status_code==200
 
+@pytest.mark.django_db
 def test_post_publication(mocker):
     m=mocker.patch("requests.Session")
     data={
@@ -99,3 +106,6 @@ def test_post_publication(mocker):
     response=c.post(reverse('client_publication'),data=data
     )
     assert response.status_code==200
+    #test session
+    c.get(reverse('client_publication'))
+    assert c.session.get("healthDataFormat")=='CDA'
