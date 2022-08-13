@@ -6,6 +6,7 @@ from django import forms
 from django.http import HttpRequest
 from .FSEgtwUtils import create_pdf_with_attachment, JwtGenerator, JwtData
 from django.conf import settings
+from typing import Iterable
 import requests
 import json
 from .xml_initial import cda
@@ -21,7 +22,15 @@ def get_issuer():
     iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
     return iss
 
+def build_jwt_generator():
+        key = (settings.BASE_DIR/'client_sign').read_bytes()
+        cert = (settings.BASE_DIR/'client_sign').read_text()
+        certlines = cert.splitlines()
+        cert = '\n'.join(
+            certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
+        return JwtGenerator(key, cert)
 
+jwt_generator=build_jwt_generator()
 class ValidationForm(forms.Form):
     # PARAMETRY BODY
     healthDataFormat = forms.ChoiceField(choices=[('CDA', 'CDA')])
@@ -82,7 +91,7 @@ class PublicationForm(forms.Form):
     #REFERTO CDA
     cda = forms.CharField(widget=forms.Textarea(
         attrs={"cols": "120", "rows": "30"}), initial=cda)
-    
+
     @staticmethod
     def get_body_parameters():
         return [
@@ -127,19 +136,9 @@ def make_request(url,data, jwt, jwt_auth, pdf):
                  )
     return res
 
-def validation(request: HttpRequest):
-    jwt = None
-    response = None
-    jwt_auth = None
-    jwt_data = None
-    jwt_auth_data = None
-    if request.method == 'POST':
-        form = ValidationForm(request.POST)
-        if form.is_valid():
-            #save data in session
-            for k in form.fields.keys():
-                request.session[k]=str(form.cleaned_data[k]) if type(form.cleaned_data[k]) == datetime else form.cleaned_data[k]
-            jwt_data = JwtData(
+
+def build_jwt_data(form:forms.Form)->JwtData:
+    return JwtData(
                 action_id=form.cleaned_data['action_id'],
                 aud=form.cleaned_data['aud'],
                 iss=form.cleaned_data['iss'],
@@ -153,17 +152,36 @@ def validation(request: HttpRequest):
                 subject_role=form.cleaned_data['subject_role'],
                 person_id=form.cleaned_data['person_id']
             )
+
+def save_data_in_session(request:HttpRequest,form:forms.Form):
+    for k in form.fields.keys():
+                request.session[k]=str(form.cleaned_data[k]) if type(form.cleaned_data[k]) == datetime else form.cleaned_data[k]
+
+def load_session_data(request:HttpRequest,keys:Iterable[str])->dict:
+    session_data={}
+    for k in keys:
+        if request.session.get(k,False):
+            session_data[k]=request.session[k]
+    return session_data
+###views
+
+def validation(request: HttpRequest):
+    jwt = None
+    response = None
+    jwt_auth = None
+    jwt_data = None
+    jwt_auth_data = None
+    if request.method == 'POST':
+        form = ValidationForm(request.POST)
+        if form.is_valid():
+            #save data in session
+            save_data_in_session(request,form)
+            jwt_data = build_jwt_data(form=form)
             data = {
                 'activity': form.cleaned_data['activity'],
                 'mode': form.cleaned_data['mode'],
                 'healthDataFormat': form.cleaned_data['healthDataFormat'],
             }
-            key = (settings.BASE_DIR/'client_sign').read_bytes()
-            cert = (settings.BASE_DIR/'client_sign').read_text()
-            certlines = cert.splitlines()
-            cert = '\n'.join(
-                certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
-            jwt_generator = JwtGenerator(key, cert)
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
             res = make_validation_request(data, jwt, jwt_auth, pdf)
@@ -172,10 +190,7 @@ def validation(request: HttpRequest):
             jwt_auth_data= jwt_generator.verify_token(jwt_auth)
     else:
         #load session data
-        session_data={}
-        for k in ValidationForm.declared_fields.keys():
-            if request.session.get(k,False):
-                session_data[k]=request.session[k]
+        session_data=load_session_data(request,ValidationForm.declared_fields.keys())
         if session_data:
             form = ValidationForm(initial=session_data)
         else:
@@ -200,20 +215,7 @@ def publication(request: HttpRequest):
         if form.is_valid():
             for k in form.fields.keys():
                 request.session[k]=str(form.cleaned_data[k]) if type(form.cleaned_data[k]) == datetime else form.cleaned_data[k]
-            jwt_data = JwtData(
-                action_id=form.cleaned_data['action_id'],
-                aud=form.cleaned_data['aud'],
-                iss=form.cleaned_data['iss'],
-                locality=form.cleaned_data['locality'],
-                patient_consent=form.cleaned_data['patient_consent'],
-                purpose_of_use=form.cleaned_data['purpose_of_use'],
-                resource_hl7_type=form.cleaned_data['resource_hl7_type'],
-                sub=form.cleaned_data['sub'],
-                subject_organization=form.cleaned_data['subject_organization'],
-                subject_organization_id=form.cleaned_data['subject_organization_id'],
-                person_id=form.cleaned_data['person_id'],
-                subject_role=form.cleaned_data['subject_role'],
-            )
+            jwt_data = build_jwt_data(form=form)
             # build requestBody from form, also convert every value to string
             data = {
                 k:str(form.cleaned_data[k]) for k in form.get_body_parameters() if form.cleaned_data[k]
@@ -221,22 +223,13 @@ def publication(request: HttpRequest):
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
             pdf_hash=hashlib.sha256(pdf.getvalue()).hexdigest()
             jwt_data.attachment_hash=pdf_hash
-            key = (settings.BASE_DIR/'client_sign').read_bytes()
-            cert = (settings.BASE_DIR/'client_sign').read_text()
-            certlines = cert.splitlines()
-            cert = '\n'.join(
-                certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
-            jwt_generator = JwtGenerator(key, cert)
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             res = make_publication_request(data, jwt, jwt_auth, pdf)
             response = res
             jwt_data= jwt_generator.verify_token(jwt)
             jwt_auth_data= jwt_generator.verify_token(jwt_auth)
     else:
-        session_data={}
-        for k in PublicationForm.declared_fields.keys():
-            if request.session.get(k,False):
-                session_data[k]=request.session[k]
+        session_data=load_session_data(request,PublicationForm.declared_fields.keys())
         if session_data:
             form = PublicationForm(initial=session_data)
         else:
