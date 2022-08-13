@@ -16,7 +16,7 @@ def test_validation():
 
 @pytest.mark.django_db
 def test_post_validation(mocker):
-    m=mocker.patch("requests.Session")
+    mocker.patch("requests.Session")
     data={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
@@ -60,7 +60,7 @@ def test_publication():
 
 @pytest.mark.django_db
 def test_post_publication(mocker):
-    m=mocker.patch("requests.Session")
+    mocker.patch("requests.Session")
     data={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
