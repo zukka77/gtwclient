@@ -138,7 +138,7 @@ def validation(request: HttpRequest):
         if form.is_valid():
             #save data in session
             for k in form.fields.keys():
-                request.session[k]=form.cleaned_data[k]
+                request.session[k]=str(form.cleaned_data[k]) if type(form.cleaned_data[k]) == datetime else form.cleaned_data[k]
             jwt_data = JwtData(
                 action_id=form.cleaned_data['action_id'],
                 aud=form.cleaned_data['aud'],
@@ -199,7 +199,7 @@ def publication(request: HttpRequest):
         form = PublicationForm(request.POST)
         if form.is_valid():
             for k in form.fields.keys():
-                request.session[k]=form.cleaned_data[k]
+                request.session[k]=str(form.cleaned_data[k]) if type(form.cleaned_data[k]) == datetime else form.cleaned_data[k]
             jwt_data = JwtData(
                 action_id=form.cleaned_data['action_id'],
                 aud=form.cleaned_data['aud'],
