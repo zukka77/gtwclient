@@ -16,11 +16,10 @@
                 </button>
             </div>
             <div>
-                <div><strong>Http Status:</strong> {{response.status_code}}</div>
-                <textarea readonly cols="80" rows="5">
-                    {{response.text}}
-                </textarea>
-
+                <div class="text-white" :class="result_class"><strong>Http Status: {{response.status_code}}</strong></div>
+                <div class="text-white" :class="result_class">
+                <pre v-highlightjs><code class="json">[[http_response]]</code></pre>
+                </div>
             </div>
             <div class="collapse" id="jwt_signature">
                 <div><h2>JWT Signature:</h2></div>
@@ -67,21 +66,48 @@
   
 {{jwt_data|json_script:"jwt_data"}}
 {{jwt_auth_data|json_script:"jwt_auth_data"}}
-
+{{response.text|json_script:"response_data"}}
+{{response.status_code|json_script:"response_status"}}
 <script src="{% static 'client/vue/vue.js' %}"></script>
+<link rel="stylesheet" href="{%static 'client/vue/highlightjs.default.min.css' %}" />
+<script src="{% static 'client/vue/highlight.min.js' %}"></script>
+<script src="{% static 'client/vue/vue3-highlight.min.js' %}"></script>
 
 
-<script>
+<script lang="js">
   const { createApp } = Vue
-
+  
   const app = createApp({
     data() {
       return {
         jwt_data: JSON.parse(document.getElementById('jwt_data').textContent),
-        jwt_auth_data: JSON.parse(document.getElementById('jwt_auth_data').textContent)
+        jwt_auth_data: JSON.parse(document.getElementById('jwt_auth_data').textContent),
+        response_data: JSON.parse(document.getElementById('response_data').textContent),
+        response_status: JSON.parse(document.getElementById('response_status').textContent),
       }
+    },
+    computed:{
+        http_response(){
+            let response=this.response_data;
+            try{
+                let data=JSON.parse(response);
+                data=JSON.stringify(data,null,2);
+                return data;
+            }
+            catch{
+                return response;
+            }
+        },
+        result_class(){
+            let res_class= {
+                    "bg-success":this.response_status.toString()[0]==="2",
+                    "bg-warning":this.response_status.toString()[0]!=="2"
+                   };
+            return res_class;
+        }
     }
   })
   app.config.compilerOptions.delimiters = ['[[', ']]']
+  app.use(Vue3Highlightjs)
   app.mount('#app')
 </script>
