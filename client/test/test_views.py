@@ -7,7 +7,9 @@ from client.views import ValidationForm,PublicationForm
 from uuid import uuid4
 from datetime import datetime
 import pytest
+import requests
 
+_POST_RETURN_VALUE={"status_code":201,"text":'{"traceID": "0634d02b639ac7d0","spanID": "0634d02b639ac7d0","workflowInstanceId": "2.16.840.1.113883.2.9.2.120.4.4.97bb3fc5bee3032679f4f07419e04af6375baafa17024527a98ede920c6812ed.6c60c58408^^^^urn:ihe:iti:xdw:2013:workflowInstanceId"}'}
 
 def test_validation():
     c=Client()
@@ -16,7 +18,7 @@ def test_validation():
 
 @pytest.mark.django_db
 def test_post_validation(mocker):
-    mocker.patch("requests.Session")
+    mocker.patch("requests.Session.post",return_value=_POST_RETURN_VALUE)
     data={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
@@ -60,7 +62,7 @@ def test_publication():
 
 @pytest.mark.django_db
 def test_post_publication(mocker):
-    mocker.patch("requests.Session")
+    mocker.patch("requests.Session.post",return_value=_POST_RETURN_VALUE)   
     data={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
