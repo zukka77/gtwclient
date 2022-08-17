@@ -8,32 +8,14 @@ from uuid import uuid4
 from datetime import datetime
 import pytest
 import requests
-from unittest.mock import MagicMock,PropertyMock
+
 _POST_RETURN_VALUE_TEXT="""
                         {"traceID": "0634d02b639ac7d0",
                          "spanID": "0634d02b639ac7d0",
                          "workflowInstanceId": "2.16.840.1.113883.2.9.2.120.4.4.97bb3fc5bee3032679f4f07419e04af6375baafa17024527a98ede920c6812ed.6c60c58408^^^^urn:ihe:iti:xdw:2013:workflowInstanceId"
                         }
                      """
-
-
-
-
-
-
-def test_validation():
-    c=Client()
-    response=c.get(reverse('client_validation'))
-    assert response.status_code==200
-
-@pytest.mark.django_db
-def test_post_validation(mocker):
-    mocker.patch("requests.Session")
-    type(requests.Session().post().request).headers=mocker.PropertyMock(return_value={}) #NOSONAR
-    type(requests.Session().post()).text=mocker.PropertyMock(return_value=_POST_RETURN_VALUE_TEXT) #NOSONAR
-    type(requests.Session().post()).status_code=mocker.PropertyMock(return_value=201) #NOSONAR
-   
-    data={
+_VALIDATION_DATA={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
         "activity":"VALIDATION",
@@ -51,37 +33,8 @@ def test_post_validation(mocker):
         "person_id":"RSSMRA22A01A399Z^^^&amp;2.16.840.1.113883.2.9.4.3.2&amp;ISO",
         "cda":cda,
         }
-    form=ValidationForm(data)
-    print(form.errors)
-    assert form.is_valid()
-    c=Client()    
-    response=c.post(reverse('client_validation'),data=data)
-    assert response.status_code==200
-     #Test invalid form
-    data={"test":"test"}
-    form=ValidationForm(data)
-    assert form.is_valid() == False
-    response=c.post(reverse('client_validation'),data=data
-    )
-    assert response.status_code==200
-    #test session
-    c.get(reverse('client_validation'))
-    assert c.session.get("healthDataFormat")=='CDA'
 
-def test_publication():
-    c=Client()
-    response=c.get(reverse('client_publication'))
-    assert response.status_code==200
-
-@pytest.mark.django_db
-def test_post_publication(mocker):
-    mocker.patch("requests.Session.post")
-    mocker.patch("requests.Session")
-    type(requests.Session().post().request).headers=mocker.PropertyMock(return_value={}) #NOSONAR
-    type(requests.Session().post()).text=mocker.PropertyMock(return_value=_POST_RETURN_VALUE_TEXT) #NOSONAR
-    type(requests.Session().post()).status_code=mocker.PropertyMock(return_value=201) #NOSONAR
-
-    data={
+_PUBLICATION_DATA={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
         "activity":"VALIDATION",
@@ -112,19 +65,39 @@ def test_post_publication(mocker):
         "identificativoSottomissione":str(uuid4()),
         "priorita":True,
         }
-    form=PublicationForm(data)
+
+_POST_DATA=[(reverse('client_validation'),ValidationForm,_VALIDATION_DATA,),(reverse('client_publication'),PublicationForm,_PUBLICATION_DATA,)]
+_POST_IDS=_GET_IDS=["VALIDATION","PUBLICATION"]
+
+@pytest.mark.parametrize("url",[reverse('client_validation'),reverse('client_publication')],ids=_GET_IDS)
+def test_get(url):
+    c=Client()
+    response=c.get(url)
+    assert response.status_code==200
+
+
+@pytest.mark.parametrize("url,form_class,data",_POST_DATA,ids=_POST_IDS)
+@pytest.mark.django_db
+def test_post(mocker,url,form_class,data):
+    mocker.patch("requests.Session.post")
+    mocker.patch("requests.Session")
+    type(requests.Session().post().request).headers=mocker.PropertyMock(return_value={}) #NOSONAR
+    type(requests.Session().post()).text=mocker.PropertyMock(return_value=_POST_RETURN_VALUE_TEXT) #NOSONAR
+    type(requests.Session().post()).status_code=mocker.PropertyMock(return_value=201) #NOSONAR
+
+    form=form_class(data)
     print(form.errors)
     assert form.is_valid()
     c=Client()
-    response=c.post(reverse('client_publication'),data=data)
+    response=c.post(url,data=data)
     assert response.status_code==200
     #Test invalid form
     data={"test":"test"}
-    form=PublicationForm(data)
+    form=form_class(data)
     assert form.is_valid() == False
-    response=c.post(reverse('client_publication'),data=data
-    )
+    response=c.post((url),data=data)
+    
     assert response.status_code==200
     #test session
-    c.get(reverse('client_publication'))
+    c.get(url)
     assert c.session.get("healthDataFormat")=='CDA'
