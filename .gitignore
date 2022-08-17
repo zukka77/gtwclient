@@ -7,3 +7,4 @@ client_sign
 coverage.xml
 .coverage
 htmlcov
+.scannerwork
