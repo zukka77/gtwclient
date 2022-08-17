@@ -1,9 +1,7 @@
-from django.test import Client
 from django.urls import reverse
-from client.views import get_issuer
+from client.views import get_issuer,ValidationForm,PublicationForm
 from client.xml_initial import cda
 from client.datasets import RUOLO_CHOICES,STRUTTURA_CHOICES,TIPO_DOCUMENTO_ALTO_CHOICES,ATTIVITA_CLINICA_CHOICES,ASSETTO_ORGNIZZATIVO_CHOICES
-from client.views import ValidationForm,PublicationForm
 from uuid import uuid4
 from datetime import datetime
 import pytest
@@ -70,15 +68,14 @@ _POST_DATA=[(reverse('client_validation'),ValidationForm,_VALIDATION_DATA,),(rev
 _POST_IDS=_GET_IDS=["VALIDATION","PUBLICATION"]
 
 @pytest.mark.parametrize("url",[reverse('client_validation'),reverse('client_publication')],ids=_GET_IDS)
-def test_get(url):
-    c=Client()
-    response=c.get(url)
+def test_get(url,client):
+    response=client.get(url)
     assert response.status_code==200
 
 
 @pytest.mark.parametrize("url,form_class,data",_POST_DATA,ids=_POST_IDS)
 @pytest.mark.django_db
-def test_post(mocker,url,form_class,data):
+def test_post(mocker,client,url,form_class,data):
     mocker.patch("requests.Session.post")
     mocker.patch("requests.Session")
     type(requests.Session().post().request).headers=mocker.PropertyMock(return_value={}) #NOSONAR
@@ -88,16 +85,16 @@ def test_post(mocker,url,form_class,data):
     form=form_class(data)
     print(form.errors)
     assert form.is_valid()
-    c=Client()
-    response=c.post(url,data=data)
+    
+    response=client.post(url,data=data)
     assert response.status_code==200
     #Test invalid form
     data={"test":"test"}
     form=form_class(data)
     assert form.is_valid() == False
-    response=c.post((url),data=data)
+    response=client.post((url),data=data)
     
     assert response.status_code==200
     #test session
-    c.get(url)
-    assert c.session.get("healthDataFormat")=='CDA'
+    client.get(url)
+    assert client.session.get("healthDataFormat")=='CDA'

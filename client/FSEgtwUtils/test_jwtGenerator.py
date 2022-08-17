@@ -21,6 +21,9 @@ class Certs(NamedTuple):
 
 @fixture(scope="session")
 def test_keys()->Keys:
+    """
+    Creates temporary test RSA keys
+    """
     key=jwk.JWK.generate(kty="RSA",size=2048)
     pem_priv_key=key.export_to_pem(private_key=True,password=None)
     pem_pub_key=key.export_to_pem(private_key=False,password=None)
