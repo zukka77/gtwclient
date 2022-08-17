@@ -185,9 +185,10 @@ def validation(request: HttpRequest):
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
             res = make_validation_request(data, jwt, jwt_auth, pdf)
-            response = res
+            response = {'request_headers':dict(res.request.headers),'status_code':res.status_code,'text':res.text}
             jwt_data= jwt_generator.verify_token(jwt)
             jwt_auth_data= jwt_generator.verify_token(jwt_auth)
+            
     else:
         #load session data
         session_data=load_session_data(request,ValidationForm.declared_fields.keys())
@@ -199,8 +200,8 @@ def validation(request: HttpRequest):
                   context={'form': form, "jwt": jwt,
                            "jwt_auth": jwt_auth,
                            "response": response,
-                           'jwt_data': jwt_data,
-                           'jwt_auth_data': jwt_auth_data
+                           "jwt_data": jwt_data,
+                           "jwt_auth_data": jwt_auth_data,
                            })
 
 
@@ -225,7 +226,7 @@ def publication(request: HttpRequest):
             jwt_data.attachment_hash=pdf_hash
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             res = make_publication_request(data, jwt, jwt_auth, pdf)
-            response = res
+            response = {'request_headers':dict(res.request.headers),'status_code':res.status_code,'text':res.text}
             jwt_data= jwt_generator.verify_token(jwt)
             jwt_auth_data= jwt_generator.verify_token(jwt_auth)
     else:

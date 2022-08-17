@@ -8,8 +8,18 @@ from uuid import uuid4
 from datetime import datetime
 import pytest
 import requests
+from unittest.mock import MagicMock,PropertyMock
+_POST_RETURN_VALUE_TEXT="""
+                        {"traceID": "0634d02b639ac7d0",
+                         "spanID": "0634d02b639ac7d0",
+                         "workflowInstanceId": "2.16.840.1.113883.2.9.2.120.4.4.97bb3fc5bee3032679f4f07419e04af6375baafa17024527a98ede920c6812ed.6c60c58408^^^^urn:ihe:iti:xdw:2013:workflowInstanceId"
+                        }
+                     """
 
-_POST_RETURN_VALUE={"status_code":201,"text":'{"traceID": "0634d02b639ac7d0","spanID": "0634d02b639ac7d0","workflowInstanceId": "2.16.840.1.113883.2.9.2.120.4.4.97bb3fc5bee3032679f4f07419e04af6375baafa17024527a98ede920c6812ed.6c60c58408^^^^urn:ihe:iti:xdw:2013:workflowInstanceId"}'}
+
+
+
+
 
 def test_validation():
     c=Client()
@@ -18,7 +28,11 @@ def test_validation():
 
 @pytest.mark.django_db
 def test_post_validation(mocker):
-    mocker.patch("requests.Session.post",return_value=_POST_RETURN_VALUE)
+    mocker.patch("requests.Session")
+    type(requests.Session().post().request).headers=mocker.PropertyMock(return_value={}) #NOSONAR
+    type(requests.Session().post()).text=mocker.PropertyMock(return_value=_POST_RETURN_VALUE_TEXT) #NOSONAR
+    type(requests.Session().post()).status_code=mocker.PropertyMock(return_value=201) #NOSONAR
+   
     data={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
@@ -40,9 +54,8 @@ def test_post_validation(mocker):
     form=ValidationForm(data)
     print(form.errors)
     assert form.is_valid()
-    c=Client()
-    response=c.post(reverse('client_validation'),data=data
-    )
+    c=Client()    
+    response=c.post(reverse('client_validation'),data=data)
     assert response.status_code==200
      #Test invalid form
     data={"test":"test"}
@@ -62,7 +75,12 @@ def test_publication():
 
 @pytest.mark.django_db
 def test_post_publication(mocker):
-    mocker.patch("requests.Session.post",return_value=_POST_RETURN_VALUE)   
+    mocker.patch("requests.Session.post")
+    mocker.patch("requests.Session")
+    type(requests.Session().post().request).headers=mocker.PropertyMock(return_value={}) #NOSONAR
+    type(requests.Session().post()).text=mocker.PropertyMock(return_value=_POST_RETURN_VALUE_TEXT) #NOSONAR
+    type(requests.Session().post()).status_code=mocker.PropertyMock(return_value=201) #NOSONAR
+
     data={
         "healthDataFormat":"CDA",
         "mode":"ATTACHMENT",
@@ -98,8 +116,7 @@ def test_post_publication(mocker):
     print(form.errors)
     assert form.is_valid()
     c=Client()
-    response=c.post(reverse('client_publication'),data=data
-    )
+    response=c.post(reverse('client_publication'),data=data)
     assert response.status_code==200
     #Test invalid form
     data={"test":"test"}

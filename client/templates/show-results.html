@@ -16,7 +16,7 @@
                 </button>
             </div>
             <div>
-                <div class="text-white" :class="result_class"><strong>Http Status: {{response.status_code}}</strong></div>
+                <div class="text-white mt-2" :class="result_class"><strong>Http Status: {{response.status_code}}</strong></div>
                 <div class="text-white" :class="result_class">
                 <pre v-highlightjs><code class="json">[[http_response]]</code></pre>
                 </div>
@@ -57,9 +57,7 @@
             </div>
             <div class="collapse" id="headers">
                 <strong>Headers:</strong>
-                <textarea readonly cols="80" rows="20">
-                {{response.request.headers}}
-                </textarea>
+                <pre v-highlightjs><code class="json">[[http_request_headers]]</code></pre>
             </div>
         </div>
         {%endif%}
@@ -68,11 +66,11 @@
 {{jwt_auth_data|json_script:"jwt_auth_data"}}
 {{response.text|json_script:"response_data"}}
 {{response.status_code|json_script:"response_status"}}
+{{response.request_headers|json_script:"request_headers"}}
 <script src="{% static 'client/vue/vue.js' %}"></script>
 <link rel="stylesheet" href="{%static 'client/vue/highlightjs.default.min.css' %}" />
 <script src="{% static 'client/vue/highlight.min.js' %}"></script>
 <script src="{% static 'client/vue/vue3-highlight.min.js' %}"></script>
-
 
 <script lang="js">
   const { createApp } = Vue
@@ -84,6 +82,7 @@
         jwt_auth_data: JSON.parse(document.getElementById('jwt_auth_data').textContent),
         response_data: JSON.parse(document.getElementById('response_data').textContent),
         response_status: JSON.parse(document.getElementById('response_status').textContent),
+        request_headers: JSON.parse(document.getElementById('request_headers').textContent),
       }
     },
     computed:{
@@ -96,6 +95,17 @@
             }
             catch{
                 return response;
+            }
+        },
+        http_request_headers(){
+            let headers=this.request_headers;
+            try{
+                let data=JSON.parse(headers);
+                data=JSON.stringify(data,null,2);
+                return data;
+            }
+            catch{
+                return headers;
             }
         },
         result_class(){
