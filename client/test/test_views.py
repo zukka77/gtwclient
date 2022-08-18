@@ -77,7 +77,6 @@ def test_get(url,client):
 @pytest.mark.django_db
 def test_post(mocker,client,url,form_class,data):
     mocker.patch("requests.Session.post")
-    mocker.patch("requests.Session")
     type(requests.Session().post().request).headers=mocker.PropertyMock(return_value={}) #NOSONAR
     type(requests.Session().post()).text=mocker.PropertyMock(return_value=_POST_RETURN_VALUE_TEXT) #NOSONAR
     type(requests.Session().post()).status_code=mocker.PropertyMock(return_value=201) #NOSONAR
