@@ -1,4 +1,15 @@
 {% load static %}
+{% if debug %}
+<script src="{% static 'client/vue/vue.devel.js' %}"></script>
+{% else %}
+<script src="{% static 'client/vue/vue.js' %}"></script>
+{% endif %}
+<link rel="stylesheet" href="{%static 'client/vue/highlightjs.default.min.css' %}" />
+<script src="{% static 'client/vue/highlight.min.js' %}"></script>
+<script src="{% static 'client/vue/vue3-highlight.min.js' %}"></script>
+<script lang="js">
+    const { createApp } = Vue
+</script>
 {% if jwt %}
         <div id="app">
             <div class="d-flex">
@@ -60,20 +71,14 @@
                 <pre v-highlightjs><code class="json">[[http_request_headers]]</code></pre>
             </div>
         </div>
-        {%endif%}
   
 {{jwt_data|json_script:"jwt_data"}}
 {{jwt_auth_data|json_script:"jwt_auth_data"}}
 {{response.text|json_script:"response_data"}}
 {{response.status_code|json_script:"response_status"}}
 {{response.request_headers|json_script:"request_headers"}}
-<script src="{% static 'client/vue/vue.js' %}"></script>
-<link rel="stylesheet" href="{%static 'client/vue/highlightjs.default.min.css' %}" />
-<script src="{% static 'client/vue/highlight.min.js' %}"></script>
-<script src="{% static 'client/vue/vue3-highlight.min.js' %}"></script>
 
 <script lang="js">
-  const { createApp } = Vue
   
   const app = createApp({
     data() {
@@ -121,3 +126,4 @@
   app.use(Vue3Highlightjs)
   app.mount('#app')
 </script>
+{%endif%}
