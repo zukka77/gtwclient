@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import TypedDict,List
-LOCAL_DIR_PATH=Path(__file__).resolve().parent
+LOCAL_DIR_PATH=Path(__file__).resolve().parent/"CDA"
 
 class ResultElem(TypedDict):
     file_path:Path

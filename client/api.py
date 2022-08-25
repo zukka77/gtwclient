@@ -1,5 +1,5 @@
 from ninja import NinjaAPI
-from client.CDA import get_available_cda
+from .FSEgtwUtils import get_available_cda
 from pathlib import Path
 api=NinjaAPI()
 
@@ -7,7 +7,7 @@ api=NinjaAPI()
 def get_example_cda(request)->list[dict]:
     available_cda=get_available_cda()
     #filter only public data
-    available_cda=list(map(lambda x: {k:v for k,v in x.items() if k in ['code','displayName']},available_cda))
+    available_cda=list(map(lambda x: {k:v for k,v in x.items() if k in ['code','displayName','codeSystem']},available_cda))
     return available_cda
 
 @api.get("/example-cda/{code}")
