@@ -2,5 +2,45 @@
 
 {% block header %}
             <h1>Test Validazione CDA</h1>
+            <div  id="app-form">
+                <div>CDA di esempio: [[ cda_selected ]]</div>
+                <select v-model="cda_selected" @change="select_cda">
+                    <option v-for="option in cda_list" :value="option.code">
+                        [ [[option.code]] ] [[ option.displayName ]]
+                    </option>
+                </select>
+            </div>
+<script lang="js">   
+    const app2 = createApp({
+        data() {
+        return {
+            cda_list:[],
+            cda_selected:""
+        }
+        },
+        mounted(){
+        fetch('{% url "api-1.0.0:get_example_cda"%}').then(res=>res.json()).then(data=>this.cda_list=data);
+        },
+        methods:{
+        select_cda(){
+            if (this.cda_selected){
+                let cda=this.cda_list.filter(el=>el.code===this.cda_selected)
+                if (cda && cda.length===1){
+                    cda=cda[0]
+                    fetch(`{% url "api-1.0.0:get_example_cda"%}/${cda.code}`)
+                    .then(response=>response.json())
+                    .then(cda_xml=>{
+                        document.getElementById('id_cda').value=cda_xml
+                        document.getElementById('id_resource_hl7_type').value=`('${cda.code}^^${cda.codeSystem}')`
+                    })
+                }
+            }
+        }
+        }
+        
+    })
+    app2.config.compilerOptions.delimiters = ['[[', ']]']
+    app2.mount('#app-form')
+    </script>
 {% endblock %}
       

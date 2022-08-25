@@ -1,15 +1,4 @@
 {% load static %}
-{% if debug %}
-<script src="{% static 'client/vue/vue.devel.js' %}"></script>
-{% else %}
-<script src="{% static 'client/vue/vue.js' %}"></script>
-{% endif %}
-<link rel="stylesheet" href="{%static 'client/vue/highlightjs.default.min.css' %}" />
-<script src="{% static 'client/vue/highlight.min.js' %}"></script>
-<script src="{% static 'client/vue/vue3-highlight.min.js' %}"></script>
-<script lang="js">
-    const { createApp } = Vue
-</script>
 {% if jwt %}
         <div id="app">
             <div class="d-flex">
