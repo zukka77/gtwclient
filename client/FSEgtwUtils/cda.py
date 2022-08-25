@@ -23,9 +23,9 @@ def get_available_cda()->List[ResultElem]:
         result_elem:ResultElem={
             "file_path":str(p.absolute()),
             "file_name":p.name,
-            "code":code.get('code'),
-            "codeSystem":code.get('codeSystem'),
-            "displayName":code.get('displayName')
+            "code":code.get('code').strip(),
+            "codeSystem":code.get('codeSystem').strip(),
+            "displayName":code.get('displayName').strip()
 
         }
         res.append(result_elem)
