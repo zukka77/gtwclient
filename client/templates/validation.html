@@ -3,12 +3,18 @@
 {% block header %}
             <h1>Test Validazione CDA</h1>
             <div  id="app-form">
-                <div>CDA di esempio: [[ cda_selected ]]</div>
-                <select v-model="cda_selected" @change="select_cda">
-                    <option v-for="option in cda_list" :value="option.code">
-                        [ [[option.code]] ] [[ option.displayName ]]
-                    </option>
-                </select>
+                <div class="control-group"> 
+                    <label for="id_example_cda" class="control-label">
+                        Usa CDA di esempio: [[ cda_selected ]]
+                    </label> 
+                    <div class="controls">
+                         <select name="example_cda" class="select" id="id_example_cda" v-model="cda_selected" @change="select_cda">
+                            <option v-for="option in cda_list" :value="option.code">
+                                [ [[option.code]] ] [[ option.displayName ]]
+                            </option>
+                        </select> 
+                    </div>
+                </div>
             </div>
 <script lang="js">   
     const app2 = createApp({
