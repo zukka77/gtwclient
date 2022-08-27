@@ -1,4 +1,4 @@
-from django.urls import reverse
+from django.urls import reverse,reverse_lazy
 from client.views import get_issuer,ValidationForm,PublicationForm
 from client.xml_initial import cda
 from client.datasets import RUOLO_CHOICES,STRUTTURA_CHOICES,TIPO_DOCUMENTO_ALTO_CHOICES,ATTIVITA_CLINICA_CHOICES,ASSETTO_ORGNIZZATIVO_CHOICES
@@ -97,3 +97,11 @@ def test_post(mocker,client,url,form_class,data):
     #test session
     client.get(url)
     assert client.session.get("healthDataFormat")=='CDA'
+
+
+def test_api_examples_cda(client):
+        response=client.get(reverse_lazy("api-1.0.0:get_example_cda"))
+        assert response.status_code==200
+        data=response.json()
+        response=client.get(reverse_lazy("api-1.0.0:get_example_cda_id",args=[data[0]['code']]))
+        assert response.status_code==200

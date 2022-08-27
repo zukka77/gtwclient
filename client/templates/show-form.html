@@ -11,13 +11,11 @@
         </div>
         <form method="post">
             {% csrf_token %}
+           
             {{form|crispy}}
             <input class="btn btn-primary my-2" type="submit" value="Submit">
         </form>
     {% include 'show-results.html' %}
     </div>
-   
-      
-   
 </div>
 {% endblock %}
