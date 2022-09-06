@@ -14,6 +14,10 @@
                     aria-expanded="false" aria-controls="headers">
                     Headers
                 </button>
+                <button class="btn btn-primary me-2" type="button" data-bs-toggle="collapse" data-bs-target="#payload"
+                    aria-expanded="false" aria-controls="headers">
+                    Payload
+                </button>
             </div>
             <div>
                 <div class="text-white mt-2" :class="result_class"><strong>Http Status: {{response.status_code}}</strong></div>
@@ -59,10 +63,15 @@
                 <strong>Headers:</strong>
                 <pre v-highlightjs><code class="json">[[http_request_headers]]</code></pre>
             </div>
+            <div class="collapse" id="payload">
+                <strong>Payload:</strong>
+                <pre v-highlightjs><code class="json">[[payload]]</code></pre>
+            </div>
         </div>
   
 {{jwt_data|json_script:"jwt_data"}}
 {{jwt_auth_data|json_script:"jwt_auth_data"}}
+{{request_data|json_script:"request_data"}}
 {{response.text|json_script:"response_data"}}
 {{response.status_code|json_script:"response_status"}}
 {{response.request_headers|json_script:"request_headers"}}
@@ -76,6 +85,7 @@
         jwt_auth_data: JSON.parse(document.getElementById('jwt_auth_data').textContent),
         response_data: JSON.parse(document.getElementById('response_data').textContent),
         response_status: JSON.parse(document.getElementById('response_status').textContent),
+        request_data: JSON.parse(document.getElementById('request_data').textContent),
         request_headers: JSON.parse(document.getElementById('request_headers').textContent),
       }
     },
@@ -108,6 +118,17 @@
                     "bg-warning":this.response_status.toString()[0]!=="2"
                    };
             return res_class;
+        },
+        payload(){
+            let payload=this.request_data;
+            try{
+                let data=JSON.parse(payload);
+                data=JSON.stringify(payload,null,2);
+                return data;
+            }
+            catch{
+                return payload;
+            }
         }
     }
   })

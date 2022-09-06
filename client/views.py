@@ -171,6 +171,7 @@ def validation(request: HttpRequest):
     jwt_auth = None
     jwt_data = None
     jwt_auth_data = None
+    request_data = None
     if request.method == 'POST':
         form = ValidationForm(request.POST)
         if form.is_valid():
@@ -184,6 +185,7 @@ def validation(request: HttpRequest):
             }
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
+            request_data = data
             res = make_validation_request(data, jwt, jwt_auth, pdf)
             response = {'request_headers':dict(res.request.headers),'status_code':res.status_code,'text':res.text}
             jwt_data= jwt_generator.verify_token(jwt)
@@ -197,11 +199,13 @@ def validation(request: HttpRequest):
         else:
             form = ValidationForm()
     return render(request, 'validation.html',
-                  context={'form': form, "jwt": jwt,
-                           "jwt_auth": jwt_auth,
-                           "response": response,
-                           "jwt_data": jwt_data,
-                           "jwt_auth_data": jwt_auth_data,
+                  context={'form': form, 
+                           'jwt': jwt,
+                           'jwt_auth': jwt_auth,
+                           'response': response,
+                           'jwt_data': jwt_data,
+                           'jwt_auth_data': jwt_auth_data,
+                           'request_data': request_data
                            })
 
 
@@ -211,6 +215,7 @@ def publication(request: HttpRequest):
     jwt_auth = None
     jwt_data = None
     jwt_auth_data = None
+    request_data = None
     if request.method == 'POST':
         form = PublicationForm(request.POST)
         if form.is_valid():
@@ -219,12 +224,13 @@ def publication(request: HttpRequest):
             jwt_data = build_jwt_data(form=form)
             # build requestBody from form, also convert every value to string
             data = {
-                k:str(form.cleaned_data[k]) for k in form.get_body_parameters() if form.cleaned_data[k]
+                k:str(form.cleaned_data[k]) if type(form.cleaned_data[k]) not in (str,int,bool)  else form.cleaned_data[k] for k in form.get_body_parameters() if form.cleaned_data[k]
             }
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
             pdf_hash=hashlib.sha256(pdf.getvalue()).hexdigest()
             jwt_data.attachment_hash=pdf_hash
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
+            request_data=data
             res = make_publication_request(data, jwt, jwt_auth, pdf)
             response = {'request_headers':dict(res.request.headers),'status_code':res.status_code,'text':res.text}
             jwt_data= jwt_generator.verify_token(jwt)
@@ -236,9 +242,11 @@ def publication(request: HttpRequest):
         else:
             form = PublicationForm()
     return render(request, 'publication.html',
-                  context={'form': form, "jwt": jwt,
-                           "jwt_auth": jwt_auth,
-                           "response": response,
+                  context={'form': form, 
+                           'jwt': jwt,
+                           'jwt_auth': jwt_auth,
+                           'response': response,
                            'jwt_data': jwt_data,
-                           'jwt_auth_data': jwt_auth_data
+                           'jwt_auth_data': jwt_auth_data,
+                           'request_data': request_data
                            })
