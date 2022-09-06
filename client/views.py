@@ -224,7 +224,7 @@ def publication(request: HttpRequest):
             jwt_data = build_jwt_data(form=form)
             # build requestBody from form, also convert every value to string
             data = {
-                k:str(form.cleaned_data[k]) if type(form.cleaned_data[k]) not in (str,int,bool)  else form.cleaned_data[k] for k in form.get_body_parameters() if form.cleaned_data[k]
+                k:str(form.cleaned_data[k]) if type(form.cleaned_data[k]) not in (str,int,bool,list)  else form.cleaned_data[k] for k in form.get_body_parameters() if form.cleaned_data[k]
             }
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
             pdf_hash=hashlib.sha256(pdf.getvalue()).hexdigest()
