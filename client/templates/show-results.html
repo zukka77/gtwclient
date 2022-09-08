@@ -22,7 +22,7 @@
             <div>
                 <div class="text-white mt-2" :class="result_class"><strong>Http Status: {{response.status_code}}</strong></div>
                 <div class="text-white" :class="result_class">
-                <pre v-highlightjs><code class="json">[[http_response]]</code></pre>
+                <highlightjs :code="http_response" language="json"/>
                 </div>
             </div>
             <div class="collapse" id="jwt_signature">
@@ -61,11 +61,11 @@
             </div>
             <div class="collapse" id="headers">
                 <strong>Headers:</strong>
-                <pre v-highlightjs><code class="json">[[http_request_headers]]</code></pre>
+                <highlightjs :code="http_request_headers" language="json"/>
             </div>
             <div class="collapse" id="payload">
                 <strong>Payload:</strong>
-                <pre v-highlightjs><code class="json">[[payload]]</code></pre>
+                <highlightjs :code="payload" language="json"/>
             </div>
         </div>
   
@@ -79,6 +79,7 @@
 <script lang="js">
   
   const app = createApp({
+    name: "results",
     data() {
       return {
         jwt_data: JSON.parse(document.getElementById('jwt_data').textContent),
@@ -104,11 +105,10 @@
         http_request_headers(){
             let headers=this.request_headers;
             try{
-                let data=JSON.parse(headers);
-                data=JSON.stringify(data,null,2);
+                let data=JSON.stringify(headers,null,2);
                 return data;
             }
-            catch{
+            catch(error){
                 return headers;
             }
         },
@@ -120,20 +120,19 @@
             return res_class;
         },
         payload(){
-            let payload=this.request_data;
+            let data=this.request_data;
             try{
-                let data=JSON.parse(payload);
-                data=JSON.stringify(payload,null,2);
+                data=JSON.stringify(data,null,2);
                 return data;
             }
-            catch{
-                return payload;
+            catch (error){
+                return data;
             }
         }
     }
   })
   app.config.compilerOptions.delimiters = ['[[', ']]']
-  app.use(Vue3Highlightjs)
+  app.use(hljsVuePlugin)
   app.mount('#app')
 </script>
 {%endif%}
