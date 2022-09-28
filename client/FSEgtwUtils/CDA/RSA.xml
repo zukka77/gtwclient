@@ -27,12 +27,12 @@
 				<postalCode>00187</postalCode> 
 				<streetAddressLine>Via Prova 12</streetAddressLine> 
 			</addr> 
-			<telecom use="HP" value="mailto:giuseppe.verdi@example.com"/>
-			<telecom use="MC" value="tel:33224456"/>
+			<telecom use="HP" value="mailto:prova.provax@example.com"/>
+			<telecom use="MC" value="tel:3340000000"/>
 			<patient>
 				<name>
 					<family>Rossi</family>
-					<given>Guido</given>
+					<given>Rosso</given>
 				</name>
 				<administrativeGenderCode code="M" codeSystem="2.16.840.1.113883.5.1" codeSystemName="HL7 AdministrativeGender" displayName="MASCHIO"/> 
 				<birthTime value="19600619"/>
@@ -68,7 +68,7 @@
 			<telecom use="MC" value="tel:3340000000"/>
 			<assignedPerson> 
 				<name> 
-					<family>Prova</family> 
+					<family>Prove</family> 
 					<given>Prova</given> 
 					<prefix>Dr</prefix>
 				</name> 
@@ -91,7 +91,7 @@
 			<telecom use="MC" value="tel:3300000000"/> 
 			<assignedPerson>
 				<name>
-					<family>Prova</family> 
+					<family>Test</family> 
 					<given>Prova</given> 
 				</name>
 			</assignedPerson>
@@ -131,8 +131,8 @@
 				<telecom use="MC" value="tel:3300000000"/> 
 				<assignedPerson>
 					<name>
-						<family>prova</family>
-						<given>prova</given>
+						<family>Prova</family>
+						<given>Verifica</given>
 						<prefix>Dott.ssa</prefix>
 					</name>
 				</assignedPerson>
@@ -155,7 +155,7 @@
 			<telecom use="HP" value="mailto:prova.provax@example.com"/> 
 			<associatedPerson>
 				<name>
-					<family>Prova</family>
+					<family>Provata</family>
 					<given>Prova</given>
 					<prefix>Dott.</prefix>
 				</name>
@@ -394,7 +394,7 @@
 														</originalText>
 													</value>
 												</observation>
-											</entryRelationship>							
+											</entryRelationship>										
 											<entryRelationship typeCode="SUBJ" >
 												<observation classCode="OBS" moodCode="EVN"> 
 													<code code="SEV" displayName="Criticality" codeSystem="2.16.840.1.113883.5.4" codeSystemName="ActCode"/>
