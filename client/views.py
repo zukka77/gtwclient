@@ -205,7 +205,8 @@ def validation(request: HttpRequest):
                            'response': response,
                            'jwt_data': jwt_data,
                            'jwt_auth_data': jwt_auth_data,
-                           'request_data': request_data
+                           'request_data': request_data,
+                           'BASE_URL':settings.GTW_BASE_URL
                            })
 
 
@@ -248,5 +249,6 @@ def publication(request: HttpRequest):
                            'response': response,
                            'jwt_data': jwt_data,
                            'jwt_auth_data': jwt_auth_data,
-                           'request_data': request_data
+                           'request_data': request_data,
+                           'BASE_URL':settings.GTW_BASE_URL
                            })
