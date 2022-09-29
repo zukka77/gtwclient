@@ -15,12 +15,16 @@ from pathlib import Path
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, True),
-    SECRET_KEY=(str,"django-insecure-%8hnm3b(k2!r$&p@2iuzte3xick)c!z9*l_di4m7&=_z4c&ae&")
+    SECRET_KEY=(str,"django-insecure-%8hnm3b(k2!r$&p@2iuzte3xick)c!z9*l_di4m7&=_z4c&ae&"),
+    BASE_URL=(str,"https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway")
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR/'.env')
+
+GTW_BASE_URL=env('BASE_URL')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/

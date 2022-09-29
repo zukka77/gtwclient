@@ -113,12 +113,12 @@ class PublicationForm(forms.Form):
         ]
 
 def make_validation_request(data, jwt, jwt_auth, pdf):
-    VALIDATION_URL = "https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1/documents/validation"
+    VALIDATION_URL = settings.GTW_BASE_URL+"/v1/documents/validation"
     return make_request(VALIDATION_URL,data,jwt,jwt_auth,pdf)
 
 
 def make_publication_request(data, jwt, jwt_auth, pdf):
-    PUBLICATION_URL = "https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1/documents/"
+    PUBLICATION_URL = settings.GTW_BASE_URL+"/v1/documents"
     return make_request(PUBLICATION_URL,data,jwt,jwt_auth,pdf)
 
 def make_request(url,data, jwt, jwt_auth, pdf):

@@ -6,7 +6,6 @@ RUN mkdir -p /app/client
 RUN mkdir -p /app/gtwclient
 COPY requirements.txt /app
 RUN /venv/bin/pip install -r /app/requirements.txt --no-cache-dir
-
 COPY manage.py  /app
 COPY ./gtwclient  /app/gtwclient/
 COPY ./client  /app/client/
