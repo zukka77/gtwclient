@@ -32,9 +32,14 @@ e specificando la password di importazione.
 
 ---
 
-## Esecuzione
+## Configurazione
 
-> Prima di poter eseguire il programma è **necessario** creare un file `settings.py` all'interno della directory `gtwclient`, è possibile modificare e/o copiare il file `gtwclient/settings-sample.py`  
+Prima di poter eseguire il programma è **necessario** creare un file `settings.py` all'interno della directory `gtwclient`, è possibile modificare e/o copiare il file `gtwclient/settings-sample.py`  
+
+È possibile valorizzare la variabile d'ambiente `GTW_BASE_URL` per specificare l'url dell'istanza del gateway da puntare.
+Nel caso di build del container è possibile mettere la variabile nel file `env-container`. 
+
+## Esecuzione
 
 Ci sono 2 modalità di esecuazione del client:
 * [come progetto Django sul proprio pc](#esecuzione-locale)
@@ -51,7 +56,7 @@ si consiglia l'utilizzo di un virtual environment
 
         pip install -r requirements.txt
 
-- inizializzazione database (la configurazione standatd creerà un database sqlite locale):
+- inizializzazione database (la configurazione standard creerà un database sqlite locale):
 
         ./manage.py migrate
 
