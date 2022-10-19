@@ -1,4 +1,5 @@
 from datetime import datetime
+from doctest import ELLIPSIS_MARKER
 from pprint import pprint
 from uuid import uuid4
 from django.shortcuts import render
@@ -23,14 +24,32 @@ def get_issuer():
     return iss
 
 def build_jwt_generator():
-        key = (settings.BASE_DIR/'client_sign').read_bytes()
-        cert = (settings.BASE_DIR/'client_sign').read_text()
-        certlines = cert.splitlines()
-        cert = '\n'.join(
-            certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
-        return JwtGenerator(key, cert)
+        file_paths=[]
+        if (settings.BASE_DIR/'client_sign_upload').exists():
+            file_paths.append(settings.BASE_DIR/'client_sign_upload')
+        if (settings.BASE_DIR/'client_sign').exists():
+            file_paths.append(settings.BASE_DIR/'client_sign')
+        for file_path in file_paths:
+            try:
+                key = file_path.read_bytes()
+                cert = file_path.read_text()
+                certlines = cert.splitlines()
+                cert = '\n'.join(
+                    certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
+                return JwtGenerator(key, cert)
+            except:
+                pass
+        #TODO: NOCERT
 
 jwt_generator=build_jwt_generator()
+
+class CertForm(forms.Form):
+    generate_random_cert=forms.BooleanField(label="genera certificati",required=False)
+    client_auth=forms.CharField(widget=forms.Textarea(
+        attrs={"cols": "120", "rows": "30"}), required=False, label="certificato di autenticazione")
+    client_sign=forms.CharField(widget=forms.Textarea(
+        attrs={"cols": "120", "rows": "30"}), required=False, label="certificato di signature")
+    
 class ValidationForm(forms.Form):
     # PARAMETRY BODY
     healthDataFormat = forms.ChoiceField(choices=[('CDA', 'CDA')])
@@ -123,7 +142,12 @@ def make_publication_request(data, jwt, jwt_auth, pdf):
 
 def make_request(url,data, jwt, jwt_auth, pdf):
     s = requests.Session()
-    s.cert = str(settings.BASE_DIR/'client_auth')
+    if (settings.BASE_DIR/'client_auth_upload').exists():
+        cert_path=str((settings.BASE_DIR/'client_auth_upload'))
+    elif (settings.BASE_DIR/'client_auth').exists():
+        cert_path=str((settings.BASE_DIR/'client_auth'))
+
+    s.cert = cert_path
     s.headers.update({"Accept": "application/json"})
     headers = {"Authorization": "Bearer "+jwt_auth, "FSE-JWT-Signature": jwt}
 
@@ -252,3 +276,33 @@ def publication(request: HttpRequest):
                            'request_data': request_data,
                            'BASE_URL':settings.GTW_BASE_URL
                            })
+
+def certificate_view(request:HttpRequest):
+    form=None
+    if request.method=='POST':
+        form=CertForm(request.POST)
+        if form.is_valid():
+            #TODO: check if certs are present
+            #TODO: check if certs are good
+            client_auth=form.cleaned_data['client_auth']
+            client_sign=form.cleaned_data['client_sign']
+            (settings.BASE_DIR/'client_sign_upload').write_text(client_sign,encoding='utf8')
+            (settings.BASE_DIR/'client_auth_upload').write_text(client_auth,encoding='utf8')
+            global jwt_generator
+            try:
+                jwt_generator=build_jwt_generator()
+            except:
+                (settings.BASE_DIR/'client_sign_upload').unlink()
+                (settings.BASE_DIR/'client_auth_upload').unlink()
+
+    if not form and (settings.BASE_DIR/'client_sign_upload').exists() and (settings.BASE_DIR/'client_auth_upload').exists():
+        form=CertForm(initial={
+            "client_sign": (settings.BASE_DIR/'client_sign_upload').read_text(encoding='utf8'),
+            "client_auth": (settings.BASE_DIR/'client_auth_upload').read_text(encoding='utf8')
+        })
+    else:
+        form=CertForm()
+    return render(request,'cert_upload.html',context={
+        'form':form,
+        'BASE_URL':settings.GTW_BASE_URL
+    })

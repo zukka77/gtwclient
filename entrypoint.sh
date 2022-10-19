@@ -36,13 +36,16 @@ chown app: client_sign
 su  app -c '/venv/bin/python ./manage.py makemigrations'
 su  app -c '/venv/bin/python ./manage.py migrate'
 
-su  app -c '/venv/bin/python ./manage.py have_superuser --silent ' || RES=$?
+
 
 grep SECRET_KEY .env || RES=$?
 if [ $RES -ne 0 ];then
     SECRET=$(python -c "import secrets;print(secrets.token_hex())")
     echo -e "\nSECRET_KEY=${SECRET}\n" >> .env
 fi
+
+
+su  app -c '/venv/bin/python ./manage.py have_superuser --silent ' || RES=$?
 
 if [  $RES -ne 0 ];then
     echo "no superuser detected creating one"
