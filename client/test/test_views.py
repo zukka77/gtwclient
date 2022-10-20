@@ -117,11 +117,11 @@ def test_cert_upload(mocker,client,url,form_class,data):
         client_auth_path:pathlib.Path=settings.BASE_DIR/'client_auth'
         client_sign_upload_path=settings.BASE_DIR/'client_sign_upload'
         client_auth_upload_path=settings.BASE_DIR/'client_auth_upload'
-        response=client.post(reverse('certificate_view'),{"client_auth":"test","client_sign":"test"})
+        client.post(reverse('certificate_view'),{"client_auth":"test","client_sign":"test"})
         assert not client_sign_upload_path.exists()
         assert not client_auth_upload_path.exists()
         test_post(mocker,client,url,form_class,data)
-        response=client.post(reverse('certificate_view'),{
+        client.post(reverse('certificate_view'),{
                                                                 "client_auth":client_auth_path.read_text(encoding="utf8"),
                                                                 "client_sign":client_sign_path.read_text(encoding="utf8")
                                                         })
