@@ -17,6 +17,7 @@ from cryptography import x509
 from cryptography.x509.oid import NameOID
 import functools
 import hashlib
+from jwcrypto import jwk
 
 def get_issuer()->str:
     cert_paths=[]
@@ -61,7 +62,6 @@ def useGenerator(func):
 
 
 class CertForm(forms.Form):
-    generate_random_cert=forms.BooleanField(label="genera certificati",required=False)
     client_auth=forms.CharField(widget=forms.Textarea(
         attrs={"cols": "80", "rows": "5"}), required=False, label="certificato di autenticazione")
     client_sign=forms.CharField(widget=forms.Textarea(
@@ -299,15 +299,16 @@ def certificate_view(request:HttpRequest):
     if request.method=='POST':
         form=CertForm(request.POST)
         if form.is_valid():
-            #TODO: check if certs are present
-            #TODO: check if certs are good
             client_auth=form.cleaned_data['client_auth']
             client_sign=form.cleaned_data['client_sign']
             (settings.BASE_DIR/'client_sign_upload').write_text(client_sign,encoding='utf8')
             (settings.BASE_DIR/'client_auth_upload').write_text(client_auth,encoding='utf8')
             try:
-                build_jwt_generator()
+                #check if certs are good
+                jwk.JWK.from_pem((settings.BASE_DIR/'client_sign_upload').read_bytes())
+                jwk.JWK.from_pem((settings.BASE_DIR/'client_auth_upload').read_bytes())
             except:
+                #delete them if are not...
                 (settings.BASE_DIR/'client_sign_upload').unlink()
                 (settings.BASE_DIR/'client_auth_upload').unlink()
 
