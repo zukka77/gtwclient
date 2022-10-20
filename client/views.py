@@ -19,32 +19,37 @@ import functools
 import hashlib
 
 def get_issuer()->str:
-    cert_path=None
+    cert_paths=[]
     if (settings.BASE_DIR/'client_sign_upload').exists():
-            cert_path=(settings.BASE_DIR/'client_sign_upload')
-    elif (settings.BASE_DIR/'client_sign').exists():
-            cert_path=(settings.BASE_DIR/'client_sign')
-    crt = x509.load_pem_x509_certificate(cert_path.read_bytes())
-    iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-    return iss
+            cert_paths.append(settings.BASE_DIR/'client_sign_upload')
+    if (settings.BASE_DIR/'client_sign').exists():
+            cert_paths.append(settings.BASE_DIR/'client_sign')
+    for cert_path in cert_paths:
+        try:
+            crt = x509.load_pem_x509_certificate(cert_path.read_bytes())
+            iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+            return iss
+        except:
+            pass
+    #TODO: nocert
 
 def build_jwt_generator()->JwtGenerator:
-        file_paths=[]
-        if (settings.BASE_DIR/'client_sign_upload').exists():
-            file_paths.append(settings.BASE_DIR/'client_sign_upload')
-        if (settings.BASE_DIR/'client_sign').exists():
-            file_paths.append(settings.BASE_DIR/'client_sign')
-        for file_path in file_paths:
-            try:
-                key = file_path.read_bytes()
-                cert = file_path.read_text()
-                certlines = cert.splitlines()
-                cert = '\n'.join(
-                    certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
-                return JwtGenerator(key, cert)
-            except:
-                pass
-        #TODO: NOCERT
+    file_paths=[]
+    if (settings.BASE_DIR/'client_sign_upload').exists():
+        file_paths.append(settings.BASE_DIR/'client_sign_upload')
+    if (settings.BASE_DIR/'client_sign').exists():
+        file_paths.append(settings.BASE_DIR/'client_sign')
+    for file_path in file_paths:
+        try:
+            key = file_path.read_bytes()
+            cert = file_path.read_text()
+            certlines = cert.splitlines()
+            cert = '\n'.join(
+                certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
+            return JwtGenerator(key, cert)
+        except:
+            pass
+    #TODO: NOCERT
 
 
 def useGenerator(func):
