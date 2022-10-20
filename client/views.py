@@ -15,15 +15,20 @@ from .datasets import ASSETTO_ORGNIZZATIVO_CHOICES, ATTIVITA_CLINICA_CHOICES, RE
 from pathlib import Path
 from cryptography import x509
 from cryptography.x509.oid import NameOID
+import functools
 import hashlib
 
-def get_issuer():
-    crt = x509.load_pem_x509_certificate(
-        (settings.BASE_DIR/'client_sign').read_bytes())
+def get_issuer()->str:
+    cert_path=None
+    if (settings.BASE_DIR/'client_sign_upload').exists():
+            cert_path=(settings.BASE_DIR/'client_sign_upload')
+    elif (settings.BASE_DIR/'client_sign').exists():
+            cert_path=(settings.BASE_DIR/'client_sign')
+    crt = x509.load_pem_x509_certificate(cert_path.read_bytes())
     iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
     return iss
 
-def build_jwt_generator():
+def build_jwt_generator()->JwtGenerator:
         file_paths=[]
         if (settings.BASE_DIR/'client_sign_upload').exists():
             file_paths.append(settings.BASE_DIR/'client_sign_upload')
@@ -41,14 +46,21 @@ def build_jwt_generator():
                 pass
         #TODO: NOCERT
 
-jwt_generator=build_jwt_generator()
+
+def useGenerator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        jwt_generator=build_jwt_generator()
+        return func(jwt_generator,*args, **kwargs)
+    return wrapper
+
 
 class CertForm(forms.Form):
     generate_random_cert=forms.BooleanField(label="genera certificati",required=False)
     client_auth=forms.CharField(widget=forms.Textarea(
-        attrs={"cols": "120", "rows": "30"}), required=False, label="certificato di autenticazione")
+        attrs={"cols": "80", "rows": "5"}), required=False, label="certificato di autenticazione")
     client_sign=forms.CharField(widget=forms.Textarea(
-        attrs={"cols": "120", "rows": "30"}), required=False, label="certificato di signature")
+        attrs={"cols": "80", "rows": "5"}), required=False, label="certificato di signature")
     
 class ValidationForm(forms.Form):
     # PARAMETRY BODY
@@ -140,7 +152,7 @@ def make_publication_request(data, jwt, jwt_auth, pdf):
     PUBLICATION_URL = settings.GTW_BASE_URL+"/v1/documents"
     return make_request(PUBLICATION_URL,data,jwt,jwt_auth,pdf)
 
-def make_request(url,data, jwt, jwt_auth, pdf):
+def make_request(url,data, jwt, jwt_auth, pdf)->requests.Response:
     s = requests.Session()
     if (settings.BASE_DIR/'client_auth_upload').exists():
         cert_path=str((settings.BASE_DIR/'client_auth_upload'))
@@ -188,8 +200,8 @@ def load_session_data(request:HttpRequest,keys:Iterable[str])->dict:
             session_data[k]=request.session[k]
     return session_data
 ###views
-
-def validation(request: HttpRequest):
+@useGenerator
+def validation(jwt_generator,request: HttpRequest):
     jwt = None
     response = None
     jwt_auth = None
@@ -233,8 +245,8 @@ def validation(request: HttpRequest):
                            'BASE_URL':settings.GTW_BASE_URL
                            })
 
-
-def publication(request: HttpRequest):
+@useGenerator
+def publication(jwt_generator,request: HttpRequest):
     jwt = None
     response = None
     jwt_auth = None
@@ -288,9 +300,8 @@ def certificate_view(request:HttpRequest):
             client_sign=form.cleaned_data['client_sign']
             (settings.BASE_DIR/'client_sign_upload').write_text(client_sign,encoding='utf8')
             (settings.BASE_DIR/'client_auth_upload').write_text(client_auth,encoding='utf8')
-            global jwt_generator
             try:
-                jwt_generator=build_jwt_generator()
+                build_jwt_generator()
             except:
                 (settings.BASE_DIR/'client_sign_upload').unlink()
                 (settings.BASE_DIR/'client_auth_upload').unlink()
