@@ -31,8 +31,7 @@ def get_issuer()->str:
             iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
             return iss
         except:
-            pass
-    #TODO: nocert
+            raise Exception("Certificate not found")
 
 def build_jwt_generator()->JwtGenerator:
     file_paths=[]
@@ -49,8 +48,7 @@ def build_jwt_generator()->JwtGenerator:
                 certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
             return JwtGenerator(key, cert)
         except:
-            pass
-    #TODO: NOCERT
+            raise Exception("Certificate not found")
 
 
 def useGenerator(func):
