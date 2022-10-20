@@ -2,8 +2,10 @@ from django.urls import reverse,reverse_lazy
 from client.views import get_issuer,ValidationForm,PublicationForm
 from client.xml_initial import cda
 from client.datasets import RUOLO_CHOICES,STRUTTURA_CHOICES,TIPO_DOCUMENTO_ALTO_CHOICES,ATTIVITA_CLINICA_CHOICES,ASSETTO_ORGNIZZATIVO_CHOICES
+from django.conf import settings
 from uuid import uuid4
 from datetime import datetime
+import pathlib
 import pytest
 import requests
 
@@ -105,3 +107,25 @@ def test_api_examples_cda(client):
         data=response.json()
         response=client.get(reverse_lazy("api-1.0.0:get_example_cda_id",args=[data[0]['code']]))
         assert response.status_code==200
+
+
+#REALLY UGLY is it possible to call a test within another test?
+@pytest.mark.parametrize("url,form_class,data",_POST_DATA,ids=_POST_IDS)
+@pytest.mark.django_db
+def test_cert_upload(mocker,client,url,form_class,data):
+        client_sign_path:pathlib.Path=settings.BASE_DIR/'client_sign'
+        client_auth_path:pathlib.Path=settings.BASE_DIR/'client_auth'
+        client_sign_upload_path=settings.BASE_DIR/'client_sign_upload'
+        client_auth_upload_path=settings.BASE_DIR/'client_auth_upload'
+        response=client.post(reverse('certificate_view'),{"client_auth":"test","client_sign":"test"})
+        assert not client_sign_upload_path.exists()
+        assert not client_auth_upload_path.exists()
+        test_post(mocker,client,url,form_class,data)
+        response=client.post(reverse('certificate_view'),{
+                                                                "client_auth":client_auth_path.read_text(encoding="utf8"),
+                                                                "client_sign":client_sign_path.read_text(encoding="utf8")
+                                                        })
+        assert client_sign_upload_path.exists()
+        assert client_auth_upload_path.exists()
+        test_post(mocker,client,url,form_class,data)
+        client.get(reverse('certificate_view'))
