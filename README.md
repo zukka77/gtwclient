@@ -1,7 +1,11 @@
 # FSE GTW Web Client
 Questo semplice client web, realizzato con [Django](https://www.djangoproject.com/), è utile per sperimentare velocemente le chiamate verso il Gateway FSE 2.0.  
-Al momento è possibile effettuare le chiamate di **validazione** che esegue un controllo formale sul file CDA inviato e di **pubblicazione**.  
-**NB** attualmente il servizio di pubblicazione è un mock up che esegue solo alcuni controlli, tra questi il fatto che il CDA sia stato precedentemente validato. Pertanto **è necessario validare il CDA prima di poterlo pubblicare**  
+Al momento è possibile effettuare le chiamate di **validazione** che esegue un controllo formale sul file CDA inviato e di **pubblicazione**.
+
+*Questo **non** è un progetto ufficiale del progetto FSE 2.0*
+
+**NB** attualmente il servizio di pubblicazione è un mock up che esegue solo alcuni controlli, tra questi il fatto che il CDA sia stato precedentemente validato. Pertanto **è necessario validare il CDA prima di poterlo pubblicare**
+
 Il file prima dell'invio viene iniettato all'interno di un pdf di test così come richiesto dalle specifiche.  
 
 ## Certificati
@@ -36,7 +40,7 @@ e specificando la password di importazione.
 
 Prima di poter eseguire il programma è **necessario** creare un file `settings.py` all'interno della directory `gtwclient`, è possibile modificare e/o copiare il file `gtwclient/settings-sample.py`  
 
-È possibile valorizzare la variabile d'ambiente `GTW_BASE_URL` per specificare l'url dell'istanza del gateway da puntare.
+È possibile valorizzare la variabile d'ambiente `GTW_BASE_URL` per specificare l'url dell'istanza del gateway da puntare, il valore di default punta all'istanza di validazione del Gateway.
 Nel caso di build del container è possibile mettere la variabile nel file `env-container`. 
 
 ## Esecuzione
@@ -61,8 +65,12 @@ si consiglia l'utilizzo di un virtual environment
         ./manage.py migrate
 
 - certificati:
-  - mettere il file `client_auth` contenente i certificati di autenticazione nella directory base (quella contenente **manage.py**)
-  - mettere il file `client_sign` contenente i certificati di firma nella directory base
+  è possibile inserire i certificati all'interno di file o farne l'upload da pagina web.
+  - Configurazione file:
+    - mettere il file `client_auth` contenente i certificati di autenticazione nella directory base (quella contenente **manage.py**)
+    - mettere il file `client_sign` contenente i certificati di firma nella directory base
+  - Upload certificati:
+    - È possibile fare l'upload dei certificati incollandoli nella pagina `Caricamento certificati`
 
 a questo punto è sufficiente avviare è possibile avviare il server di sviluppo con:
 
@@ -91,25 +99,36 @@ Per l'esposizione del servizio verso l'esterno è necessario:
 
 È possibile utilizzare il [package disponibile nel repository](https://github.com/zukka77/gtwclient/pkgs/container/gtwclient):
 
-1. Pull dell'immagine
+1. Pull dell'immagine  
 
-                docker pull ghcr.io/zukka77/gtwclient:main
+        docker pull ghcr.io/zukka77/gtwclient:main
 
    oppure, nel caso si utilizzi podman
 
-                podman pull ghcr.io/zukka77/gtwclient:main
+        podman pull ghcr.io/zukka77/gtwclient:main
 
-2. Esecuzione del container:   
-   Per l'esecuzione è necessario passare i **certificati** al container, ciò avviene attraverso l'environment di esecuzione nelle variabili `CLIENT_AUTH` e `CLIENT_SIGN`
+2. Esecuzione del container:
+   - Certificati su file:  
+   Per l'esecuzione è necessario passare i **certificati** al container, ciò avviene attraverso l'environment di esecuzione nelle variabili `CLIENT_AUTH` e `CLIENT_SIGN`  
 
-        docker run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 ghcr.io/zukka77/gtwclient:main
+                docker run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 ghcr.io/zukka77/gtwclient:main  
+   
+        o in alternativa:  
 
-   o in alternativa:
+                podman run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 ghcr.io/zukka77/gtwclient:main  
+   
+        dove il file `client_auth` contiene i certificati di autenticazione, e il file `client_sign` contiene i certificati di firma.  
+   
+   - Upload certificati:  
+     nel caso si decida di fare upload dei certificati non è necessario passarli nell'environment 
+   
+                docker run --rm -ti -p 4000:4000 ghcr.io/zukka77/gtwclient:main
 
-        podman run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 ghcr.io/zukka77/gtwclient:main
+     o in alternativa:
 
-   dove `client_auth` contiene i certificati di autenticazione, `client_sign` contiene i certificati di firma.  
+                podman run --rm -ti  -p 4000:4000 ghcr.io/zukka77/gtwclient:main
 
+     **NB** se si sceglie di fare upload dei certificati sarà necessario caricarli ad ogni avvio del container.
 
 ### Build immagine
 
@@ -123,7 +142,7 @@ Se si utilizza podman e buildah al posto di docker è possible eseguire il build
 
         buildah bud -t gtwclient:latest
 
-Per l'esecuzione è necessario passare i **certificati** al container, ciò avviene attraverso l'environment di esecuzione nelle variabili `CLIENT_AUTH` e `CLIENT_SIGN`:
+Per passare i **certificati** al container, attraverso l'environment di esecuzione si utilizzano le variabili `CLIENT_AUTH` e `CLIENT_SIGN`:
 
         docker run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 gtwclient
 
@@ -132,5 +151,13 @@ o in alternativa:
         podman run --rm -ti -e CLIENT_AUTH="$(cat client_auth)" -e CLIENT_SIGN="$(cat client_sign)" -p 4000:4000 gtwclient
 
 dove `client_auth` contiene i certificati di autenticazione, `client_sign` contiene i certificati di firma.  
+
+Se si decide di effettuare l'**upload dei certificati** è possibile avviare i container senza specificare le variabili d'ambiente:
+
+        docker run --rm -ti -p 4000:4000 gtwclient
+
+o in alternativa:
+
+        podman run --rm -ti -p 4000:4000 gtwclient
 
 A questo punto sarà possibile collegarsi al client su [http://localhost:4000](http://localhost:4000)
