@@ -24,7 +24,6 @@ if [ -z "$NO_CLIENT_AUTH"];then
     else
         openssl req -newkey rsa:2048 -keyout client.key -x509 -days 365 -nodes -out client.crt -subj "/CN=DEMO" -days 365
         cat client.key client.crt > client_sign
-    
     fi
 else
     #GENERATE FAKE CERT
