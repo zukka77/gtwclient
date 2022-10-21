@@ -19,6 +19,15 @@ import functools
 import hashlib
 from jwcrypto import jwk
 
+def CertificateError(Exception):
+    pass
+
+def CertificateNotFoundException(CertificateError):
+    pass
+
+def CertificateNotValidException(CertificateError):
+    pass
+
 def get_issuer()->str:
     cert_paths=[]
     if (settings.BASE_DIR/'client_sign_upload').exists():
@@ -31,7 +40,7 @@ def get_issuer()->str:
             iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
             return iss
         except:
-            raise Exception("Certificate not found")
+            raise CertificateNotFoundException("Certificate not found")
 
 def build_jwt_generator()->JwtGenerator:
     file_paths=[]
@@ -48,10 +57,10 @@ def build_jwt_generator()->JwtGenerator:
                 certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
             return JwtGenerator(key, cert)
         except:
-            raise Exception("Certificate not found")
+            raise CertificateNotFoundException("Certificate not found")
 
 
-def useGenerator(func):
+def use_jwt_generator(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         jwt_generator=build_jwt_generator()
@@ -203,7 +212,7 @@ def load_session_data(request:HttpRequest,keys:Iterable[str])->dict:
             session_data[k]=request.session[k]
     return session_data
 ###views
-@useGenerator
+@use_jwt_generator
 def validation(jwt_generator,request: HttpRequest):
     jwt = None
     response = None
@@ -248,7 +257,7 @@ def validation(jwt_generator,request: HttpRequest):
                            'BASE_URL':settings.GTW_BASE_URL
                            })
 
-@useGenerator
+@use_jwt_generator
 def publication(jwt_generator,request: HttpRequest):
     jwt = None
     response = None
@@ -305,7 +314,7 @@ def certificate_view(request:HttpRequest):
                 #check if certs are good
                 jwk.JWK.from_pem((settings.BASE_DIR/'client_sign_upload').read_bytes())
                 jwk.JWK.from_pem((settings.BASE_DIR/'client_auth_upload').read_bytes())
-            except:
+            except ValueError:
                 #delete them if are not...
                 (settings.BASE_DIR/'client_sign_upload').unlink()
                 (settings.BASE_DIR/'client_auth_upload').unlink()
