@@ -7,7 +7,7 @@ from django import forms
 from django.http import HttpRequest
 from .FSEgtwUtils import create_pdf_with_attachment, JwtGenerator, JwtData
 from django.conf import settings
-from typing import Iterable
+from typing import Iterable,List
 import requests
 import json
 from .xml_initial import cda
@@ -33,7 +33,7 @@ class CertType(Enum):
     AUTH=auto()
     SIGN=auto()
 
-def get_certs_path(cert:CertType)->Iterable[Path]:
+def get_certs_path(cert:CertType)->List[Path]:
     paths=[]
     if cert==CertType.SIGN:
         for f in ('client_sign_upload','client_sign'):
