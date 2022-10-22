@@ -18,6 +18,7 @@ from cryptography.x509.oid import NameOID
 import functools
 import hashlib
 from jwcrypto import jwk
+from enum import Enum, auto
 
 def CertificateError(Exception):
     pass
@@ -26,6 +27,13 @@ def CertificateNotFoundException(CertificateError):
     pass
 
 def CertificateNotValidException(CertificateError):
+    pass
+
+def CertType(Enum):
+    AUTH=auto()
+    SIGN=auto()
+
+def get_certs_path(cert:CertType)->Iterable[Path]:
     pass
 
 def get_cert_cn(cert_path:Path=None)->str:
