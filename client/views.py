@@ -28,7 +28,7 @@ def CertificateNotFoundException(CertificateError):
 def CertificateNotValidException(CertificateError):
     pass
 
-def get_issuer(cert_path:Path=None)->str:
+def get_cert_cn(cert_path:Path=None)->str:
     if cert_path:
         cert_paths=[cert_path]
     else:
@@ -89,7 +89,7 @@ class ValidationForm(forms.Form):
     sub = forms.CharField(initial="PROVAX00X00X000Y")
     subject_role = forms.ChoiceField(choices=RUOLO_CHOICES)
     purpose_of_use = forms.ChoiceField(choices=[('TREATMENT', 'TREATMENT')])
-    iss = forms.CharField(initial=get_issuer(),disabled=True)
+    iss = forms.CharField(initial=get_cert_cn(),disabled=True)
     locality = forms.CharField(initial="201123456")
     subject_organization = forms.CharField(initial="Regione Emilia-Romagna")
     subject_organization_id = forms.CharField(initial="080")
@@ -127,7 +127,7 @@ class PublicationForm(forms.Form):
     subject_organization = forms.CharField(initial="Regione Emilia-Romagna")
     subject_organization_id = forms.CharField(initial="080")
     purpose_of_use = forms.ChoiceField(choices=[('TREATMENT', 'TREATMENT')])
-    iss = forms.CharField(initial=get_issuer(),disabled=True)
+    iss = forms.CharField(initial=get_cert_cn(),disabled=True)
     locality = forms.CharField(initial="201123456")
     aud = forms.CharField(
         initial="https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1", disabled=True)
@@ -232,7 +232,7 @@ def validation(jwt_generator,request: HttpRequest):
     request_data = None
     if request.method == 'POST':
         data=request.POST.copy()
-        data['iss']=[get_issuer()]
+        data['iss']=[get_cert_cn()]
         form = ValidationForm(data)
         #form.is_valid()
         #print(f"###################\nissuer: {get_issuer()} data: {data['iss']} form.cleaned_data: {form.cleaned_data['iss']} form: {form.fields['iss']}\n######################")
@@ -257,10 +257,10 @@ def validation(jwt_generator,request: HttpRequest):
         #load session data
         session_data=load_session_data(request,ValidationForm.declared_fields.keys())
         if session_data:
-            session_data['iss']=get_issuer()
+            session_data['iss']=get_cert_cn()
             form = ValidationForm(initial=session_data)
         else:
-            form = ValidationForm(initial={'iss':get_issuer()})
+            form = ValidationForm(initial={'iss':get_cert_cn()})
     return render(request, 'validation.html',
                   context={'form': form, 
                            'jwt': jwt,
@@ -282,7 +282,7 @@ def publication(jwt_generator,request: HttpRequest):
     request_data = None
     if request.method == 'POST':
         data=request.POST.copy()
-        data['iss']=[get_issuer()]
+        data['iss']=[get_cert_cn()]
         form = PublicationForm(data)
         if form.is_valid():
             for k in form.fields.keys():
@@ -304,10 +304,10 @@ def publication(jwt_generator,request: HttpRequest):
     else:
         session_data=load_session_data(request,PublicationForm.declared_fields.keys())
         if session_data:
-            session_data['iss']=get_issuer()
+            session_data['iss']=get_cert_cn()
             form = PublicationForm(initial=session_data)
         else:
-            form = PublicationForm(initial={"iss":get_issuer()})
+            form = PublicationForm(initial={"iss":get_cert_cn()})
     return render(request, 'publication.html',
                   context={'form': form, 
                            'jwt': jwt,
@@ -332,8 +332,8 @@ def certificate_view(request:HttpRequest):
             (settings.BASE_DIR/'client_auth_upload').write_text(client_auth,encoding='utf8')
             try:
                 #check if certs are good
-                sign_cn=get_issuer(settings.BASE_DIR/'client_sign_upload')
-                auth_cn=get_issuer(settings.BASE_DIR/'client_auth_upload')
+                sign_cn=get_cert_cn(settings.BASE_DIR/'client_sign_upload')
+                auth_cn=get_cert_cn(settings.BASE_DIR/'client_auth_upload')
             except ValueError:
                 #delete them if are not...
                 (settings.BASE_DIR/'client_sign_upload').unlink()
@@ -344,8 +344,8 @@ def certificate_view(request:HttpRequest):
             "client_sign": (settings.BASE_DIR/'client_sign_upload').read_text(encoding='utf8'),
             "client_auth": (settings.BASE_DIR/'client_auth_upload').read_text(encoding='utf8')
         })
-        sign_cn=get_issuer(settings.BASE_DIR/'client_sign_upload')
-        auth_cn=get_issuer(settings.BASE_DIR/'client_auth_upload')
+        sign_cn=get_cert_cn(settings.BASE_DIR/'client_sign_upload')
+        auth_cn=get_cert_cn(settings.BASE_DIR/'client_auth_upload')
     elif not form:
         form=CertForm()
     return render(request,'cert_upload.html',context={

@@ -1,5 +1,5 @@
 from django.urls import reverse,reverse_lazy
-from client.views import get_issuer,ValidationForm,PublicationForm
+from client.views import get_cert_cn,ValidationForm,PublicationForm
 from client.xml_initial import cda
 from client.datasets import RUOLO_CHOICES,STRUTTURA_CHOICES,TIPO_DOCUMENTO_ALTO_CHOICES,ATTIVITA_CLINICA_CHOICES,ASSETTO_ORGNIZZATIVO_CHOICES
 from django.conf import settings
@@ -22,7 +22,7 @@ _VALIDATION_DATA={
         "sub":"PROVAX00X00X000Y",
         "subject_role":RUOLO_CHOICES[0][0],
         "purpose_of_use":"TREATMENT",
-        "iss":get_issuer(),
+        "iss":get_cert_cn(),
         "locality":"201123456",
         "subject_organization":"Regione Emilia-Romagna",
         "subject_organization_id":"080",
@@ -41,7 +41,7 @@ _PUBLICATION_DATA={
         "sub":"PROVAX00X00X000Y",
         "subject_role":RUOLO_CHOICES[0][0],
         "purpose_of_use":"TREATMENT",
-        "iss":get_issuer(),
+        "iss":get_cert_cn(),
         "locality":"201123456",
         "subject_organization":"Regione Emilia-Romagna",
         "subject_organization_id":"080",
