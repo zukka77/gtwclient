@@ -28,19 +28,23 @@ def CertificateNotFoundException(CertificateError):
 def CertificateNotValidException(CertificateError):
     pass
 
-def get_issuer()->str:
-    cert_paths=[]
-    if (settings.BASE_DIR/'client_sign_upload').exists():
-            cert_paths.append(settings.BASE_DIR/'client_sign_upload')
-    if (settings.BASE_DIR/'client_sign').exists():
-            cert_paths.append(settings.BASE_DIR/'client_sign')
+def get_issuer(cert_path:Path=None)->str:
+    if cert_path:
+        cert_paths=[cert_path]
+    else:
+        cert_paths=[]
+        if (settings.BASE_DIR/'client_sign_upload').exists():
+                cert_paths.append(settings.BASE_DIR/'client_sign_upload')
+        if (settings.BASE_DIR/'client_sign').exists():
+                cert_paths.append(settings.BASE_DIR/'client_sign')
     for cert_path in cert_paths:
         try:
             crt = x509.load_pem_x509_certificate(cert_path.read_bytes())
             iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
             return iss
         except:
-            raise CertificateNotFoundException("Certificate not found")
+            raise CertificateNotValidException(f"Certificate not valid: {cert_path}")
+    raise CertificateNotFoundException("Certificate not found")
 
 def build_jwt_generator()->JwtGenerator:
     file_paths=[]
@@ -58,7 +62,8 @@ def build_jwt_generator()->JwtGenerator:
             #print(f"GWTGenerator created with cert: {file_path}")
             return JwtGenerator(key, cert)
         except:
-            raise CertificateNotFoundException("Certificate not found")
+            raise CertificateNotValidException(f"Certificate not valid: {file_path}")
+    raise CertificateNotFoundException("Certificate not found")
 
 
 def use_jwt_generator(func):
@@ -95,7 +100,7 @@ class ValidationForm(forms.Form):
     resource_hl7_type = forms.CharField(
         initial="('11502-2^^2.16.840.1.113883.6.1')")
     person_id = forms.CharField(
-        initial="RSSMRA22A01A399Z^^^&amp;2.16.840.1.113883.2.9.4.3.2&amp;ISO")
+        initial="RSSMRA22A01A399Z^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     cda = forms.CharField(widget=forms.Textarea(
         attrs={"cols": "120", "rows": "30"}), initial=cda)
 
@@ -131,7 +136,7 @@ class PublicationForm(forms.Form):
     resource_hl7_type = forms.CharField(
         initial="('11502-2^^2.16.840.1.113883.6.1')")
     person_id = forms.CharField(
-        initial="RSSMRA22A01A399Z^^^&amp;2.16.840.1.113883.2.9.4.3.2&amp;ISO")
+        initial="RSSMRA22A01A399Z^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     #REFERTO CDA
     cda = forms.CharField(widget=forms.Textarea(
         attrs={"cols": "120", "rows": "30"}), initial=cda)
@@ -316,6 +321,8 @@ def publication(jwt_generator,request: HttpRequest):
 
 def certificate_view(request:HttpRequest):
     form=None
+    auth_cn=None
+    sign_cn=None
     if request.method=='POST':
         form=CertForm(request.POST)
         if form.is_valid():
@@ -325,8 +332,8 @@ def certificate_view(request:HttpRequest):
             (settings.BASE_DIR/'client_auth_upload').write_text(client_auth,encoding='utf8')
             try:
                 #check if certs are good
-                jwk.JWK.from_pem((settings.BASE_DIR/'client_sign_upload').read_bytes())
-                jwk.JWK.from_pem((settings.BASE_DIR/'client_auth_upload').read_bytes())
+                sign_cn=get_issuer(settings.BASE_DIR/'client_sign_upload')
+                auth_cn=get_issuer(settings.BASE_DIR/'client_auth_upload')
             except ValueError:
                 #delete them if are not...
                 (settings.BASE_DIR/'client_sign_upload').unlink()
@@ -337,9 +344,13 @@ def certificate_view(request:HttpRequest):
             "client_sign": (settings.BASE_DIR/'client_sign_upload').read_text(encoding='utf8'),
             "client_auth": (settings.BASE_DIR/'client_auth_upload').read_text(encoding='utf8')
         })
+        sign_cn=get_issuer(settings.BASE_DIR/'client_sign_upload')
+        auth_cn=get_issuer(settings.BASE_DIR/'client_auth_upload')
     elif not form:
         form=CertForm()
     return render(request,'cert_upload.html',context={
+        'auth_cn':auth_cn,
+        'sign_cn':sign_cn,
         'form':form,
         'BASE_URL':settings.GTW_BASE_URL
     })
