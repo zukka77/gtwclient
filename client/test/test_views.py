@@ -138,18 +138,18 @@ def test_cert_upload(mocker,client,url,form_class,data):
 
 
 def test_get_certs_path_not_valid_cert_type():
-        with pytest.raises(ValueError) as e_info:
+        with pytest.raises(ValueError):
                 get_certs_path("test")
 
 def test_get_cert_cn_exceptions(mocker):
-        with pytest.raises(CertificateNotValidException) as e_info:
+        with pytest.raises(CertificateNotValidException):
                 get_cert_cn(Path(str(uuid4())))
 
 def test_cert_not_found(mocker):
         mocker.patch("client.views.get_certs_path").return_value=[]
-        with pytest.raises(CertificateNotFoundException) as e_info:
+        with pytest.raises(CertificateNotFoundException):
                 build_jwt_generator()
-        with pytest.raises(CertificateNotFoundException) as e_info:
+        with pytest.raises(CertificateNotFoundException):
                 get_cert_cn()
-        with pytest.raises(CertificateNotFoundException) as e_info:
+        with pytest.raises(CertificateNotFoundException):
                 make_request(data=None,jwt_auth=None,jwt=None,pdf=None,url=None)

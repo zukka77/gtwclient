@@ -20,7 +20,7 @@ import hashlib
 from jwcrypto import jwk
 from enum import Enum, auto
 
-class CertificateErrorException(BaseException):
+class CertificateErrorException(Exception):
     pass
 
 class CertificateNotFoundException(CertificateErrorException):
