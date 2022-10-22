@@ -9,6 +9,16 @@
             <h1>Caricamento Certificati</h1>
             {% endblock %}
         </div>
+        {%if sign_cn%}
+        <div class="m-2">
+            <div>
+                Auth commonName: <strong><code>{{auth_cn}}</code></strong>
+            </div>
+            <div>
+                Sign commonName: <strong><code>{{sign_cn}}</code></strong>
+            </div>
+        </div>
+        {%endif%}
         <form method="post">
             {% csrf_token %}
            

@@ -1,11 +1,11 @@
 from django.urls import reverse,reverse_lazy
-from client.views import get_issuer,ValidationForm,PublicationForm
+from client.views import get_cert_cn,ValidationForm,PublicationForm, get_certs_path,CertificateNotFoundException,CertificateNotValidException,build_jwt_generator,make_request
 from client.xml_initial import cda
 from client.datasets import RUOLO_CHOICES,STRUTTURA_CHOICES,TIPO_DOCUMENTO_ALTO_CHOICES,ATTIVITA_CLINICA_CHOICES,ASSETTO_ORGNIZZATIVO_CHOICES
 from django.conf import settings
 from uuid import uuid4
 from datetime import datetime
-import pathlib
+from pathlib import Path
 import pytest
 import requests
 
@@ -22,7 +22,7 @@ _VALIDATION_DATA={
         "sub":"PROVAX00X00X000Y",
         "subject_role":RUOLO_CHOICES[0][0],
         "purpose_of_use":"TREATMENT",
-        "iss":get_issuer(),
+        "iss":get_cert_cn(),
         "locality":"201123456",
         "subject_organization":"Regione Emilia-Romagna",
         "subject_organization_id":"080",
@@ -41,7 +41,7 @@ _PUBLICATION_DATA={
         "sub":"PROVAX00X00X000Y",
         "subject_role":RUOLO_CHOICES[0][0],
         "purpose_of_use":"TREATMENT",
-        "iss":get_issuer(),
+        "iss":get_cert_cn(),
         "locality":"201123456",
         "subject_organization":"Regione Emilia-Romagna",
         "subject_organization_id":"080",
@@ -74,7 +74,6 @@ def test_get(url,client):
     response=client.get(url)
     assert response.status_code==200
 
-
 @pytest.mark.parametrize("url,form_class,data",_POST_DATA,ids=_POST_IDS)
 @pytest.mark.django_db
 def test_post(mocker,client,url,form_class,data):
@@ -105,27 +104,52 @@ def test_api_examples_cda(client):
         response=client.get(reverse_lazy("api-1.0.0:get_example_cda"))
         assert response.status_code==200
         data=response.json()
-        response=client.get(reverse_lazy("api-1.0.0:get_example_cda_id",args=[data[0]['code']]))
-        assert response.status_code==200
+        for d in data:
+                response=client.get(reverse_lazy("api-1.0.0:get_example_cda_id",args=[d['code']]))
+                assert response.status_code==200
 
 
 #REALLY UGLY is it possible to call a test within another test?
+@pytest.mark.order(-1)
 @pytest.mark.parametrize("url,form_class,data",_POST_DATA,ids=_POST_IDS)
 @pytest.mark.django_db
 def test_cert_upload(mocker,client,url,form_class,data):
-        client_sign_path:pathlib.Path=settings.BASE_DIR/'client_sign'
-        client_auth_path:pathlib.Path=settings.BASE_DIR/'client_auth'
-        client_sign_upload_path=settings.BASE_DIR/'client_sign_upload'
-        client_auth_upload_path=settings.BASE_DIR/'client_auth_upload'
+        client_sign_path:Path=settings.BASE_DIR/'client_sign'
+        client_auth_path:Path=settings.BASE_DIR/'client_auth'
+        client_sign_upload_path:Path=settings.BASE_DIR/'client_sign_upload'
+        client_auth_upload_path:Path=settings.BASE_DIR/'client_auth_upload'
+        if client_sign_upload_path.exists(): client_sign_upload_path.unlink()
+        if client_auth_upload_path.exists(): client_auth_upload_path.unlink()
+        response=client.get(reverse('certificate_view'))
+        assert response.status_code==200
         client.post(reverse('certificate_view'),{"client_auth":"test","client_sign":"test"})
+        assert response.status_code==200
         assert not client_sign_upload_path.exists()
         assert not client_auth_upload_path.exists()
         test_post(mocker,client,url,form_class,data)
         client.post(reverse('certificate_view'),{
-                                                                "client_auth":client_auth_path.read_text(encoding="utf8"),
-                                                                "client_sign":client_sign_path.read_text(encoding="utf8")
-                                                        })
+                                                 "client_auth":client_auth_path.read_text(encoding="utf8"),
+                                                 "client_sign":client_sign_path.read_text(encoding="utf8")
+                                                })
         assert client_sign_upload_path.exists()
         assert client_auth_upload_path.exists()
         test_post(mocker,client,url,form_class,data)
         client.get(reverse('certificate_view'))
+
+
+def test_get_certs_path_not_valid_cert_type():
+        with pytest.raises(ValueError):
+                get_certs_path("test")
+
+def test_get_cert_cn_exceptions(mocker):
+        with pytest.raises(CertificateNotValidException):
+                get_cert_cn(Path(str(uuid4())))
+
+def test_cert_not_found(mocker):
+        mocker.patch("client.views.get_certs_path").return_value=[]
+        with pytest.raises(CertificateNotFoundException):
+                build_jwt_generator()
+        with pytest.raises(CertificateNotFoundException):
+                get_cert_cn()
+        with pytest.raises(CertificateNotFoundException):
+                make_request(data=None,jwt_auth=None,jwt=None,pdf=None,url=None)

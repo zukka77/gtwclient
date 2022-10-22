@@ -7,7 +7,7 @@ from django import forms
 from django.http import HttpRequest
 from .FSEgtwUtils import create_pdf_with_attachment, JwtGenerator, JwtData
 from django.conf import settings
-from typing import Iterable
+from typing import Iterable,List
 import requests
 import json
 from .xml_initial import cda
@@ -18,36 +18,54 @@ from cryptography.x509.oid import NameOID
 import functools
 import hashlib
 from jwcrypto import jwk
+from enum import Enum, auto
 
-def CertificateError(Exception):
+class CertificateErrorException(Exception):
     pass
 
-def CertificateNotFoundException(CertificateError):
+class CertificateNotFoundException(CertificateErrorException):
     pass
 
-def CertificateNotValidException(CertificateError):
+class CertificateNotValidException(CertificateErrorException):
     pass
 
-def get_issuer()->str:
-    cert_paths=[]
-    if (settings.BASE_DIR/'client_sign_upload').exists():
-            cert_paths.append(settings.BASE_DIR/'client_sign_upload')
-    if (settings.BASE_DIR/'client_sign').exists():
-            cert_paths.append(settings.BASE_DIR/'client_sign')
+class CertType(Enum):
+    AUTH=auto()
+    SIGN=auto()
+
+def get_certs_path(cert:CertType)->List[Path]:
+    paths=[]
+    if cert==CertType.SIGN:
+        for f in ('client_sign_upload','client_sign'):
+            if (settings.BASE_DIR/f).exists():
+                paths.append(settings.BASE_DIR/f)
+        return paths
+    if cert==CertType.AUTH:
+        for f in ('client_auth_upload','client_auth'):
+            if (settings.BASE_DIR/f).exists():
+                paths.append(settings.BASE_DIR/f)
+        return paths
+    raise ValueError(f"{cert} is not a valid CertType")
+    
+
+def get_cert_cn(cert_path:Path=None)->str:
+    if cert_path:
+        cert_paths=[cert_path]
+    else:
+        cert_paths=get_certs_path(CertType.SIGN)
     for cert_path in cert_paths:
         try:
             crt = x509.load_pem_x509_certificate(cert_path.read_bytes())
             iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
             return iss
         except:
-            raise CertificateNotFoundException("Certificate not found")
+            pass
+    if not cert_paths:
+        raise CertificateNotFoundException("Certificate not found")
+    raise CertificateNotValidException(f"certs: {cert_paths} is/are not valid")
 
 def build_jwt_generator()->JwtGenerator:
-    file_paths=[]
-    if (settings.BASE_DIR/'client_sign_upload').exists():
-        file_paths.append(settings.BASE_DIR/'client_sign_upload')
-    if (settings.BASE_DIR/'client_sign').exists():
-        file_paths.append(settings.BASE_DIR/'client_sign')
+    file_paths=get_certs_path(CertType.SIGN)
     for file_path in file_paths:
         try:
             key = file_path.read_bytes()
@@ -58,7 +76,8 @@ def build_jwt_generator()->JwtGenerator:
             #print(f"GWTGenerator created with cert: {file_path}")
             return JwtGenerator(key, cert)
         except:
-            raise CertificateNotFoundException("Certificate not found")
+            pass
+    raise CertificateNotFoundException("Certificate not found")
 
 
 def use_jwt_generator(func):
@@ -76,6 +95,12 @@ class CertForm(forms.Form):
         attrs={"cols": "80", "rows": "5"}), required=False, label="certificato di signature")
     
 class ValidationForm(forms.Form):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["iss"].widget.attrs["readonly"] = True
+        self.fields["iss"].initial=get_cert_cn()
+
     # PARAMETRY BODY
     healthDataFormat = forms.ChoiceField(choices=[('CDA', 'CDA')])
     mode = forms.ChoiceField(choices=[('ATTACHMENT', 'ATTACHMENT')])
@@ -84,7 +109,7 @@ class ValidationForm(forms.Form):
     sub = forms.CharField(initial="PROVAX00X00X000Y")
     subject_role = forms.ChoiceField(choices=RUOLO_CHOICES)
     purpose_of_use = forms.ChoiceField(choices=[('TREATMENT', 'TREATMENT')])
-    iss = forms.CharField(initial=get_issuer(),disabled=True)
+    iss = forms.CharField()
     locality = forms.CharField(initial="201123456")
     subject_organization = forms.CharField(initial="Regione Emilia-Romagna")
     subject_organization_id = forms.CharField(initial="080")
@@ -95,11 +120,15 @@ class ValidationForm(forms.Form):
     resource_hl7_type = forms.CharField(
         initial="('11502-2^^2.16.840.1.113883.6.1')")
     person_id = forms.CharField(
-        initial="RSSMRA22A01A399Z^^^&amp;2.16.840.1.113883.2.9.4.3.2&amp;ISO")
+        initial="RSSMRA22A01A399Z^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     cda = forms.CharField(widget=forms.Textarea(
         attrs={"cols": "120", "rows": "30"}), initial=cda)
 
 class PublicationForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["iss"].widget.attrs["readonly"] = True
+        self.fields["iss"].initial=get_cert_cn()
     # PARAMETRY BODY
     workflowInstanceId = forms.CharField(required=False)
     healthDataFormat = forms.ChoiceField(choices=[('CDA', 'CDA')])
@@ -122,7 +151,7 @@ class PublicationForm(forms.Form):
     subject_organization = forms.CharField(initial="Regione Emilia-Romagna")
     subject_organization_id = forms.CharField(initial="080")
     purpose_of_use = forms.ChoiceField(choices=[('TREATMENT', 'TREATMENT')])
-    iss = forms.CharField(initial=get_issuer(),disabled=True)
+    iss = forms.CharField()
     locality = forms.CharField(initial="201123456")
     aud = forms.CharField(
         initial="https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1", disabled=True)
@@ -131,7 +160,7 @@ class PublicationForm(forms.Form):
     resource_hl7_type = forms.CharField(
         initial="('11502-2^^2.16.840.1.113883.6.1')")
     person_id = forms.CharField(
-        initial="RSSMRA22A01A399Z^^^&amp;2.16.840.1.113883.2.9.4.3.2&amp;ISO")
+        initial="RSSMRA22A01A399Z^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     #REFERTO CDA
     cda = forms.CharField(widget=forms.Textarea(
         attrs={"cols": "120", "rows": "30"}), initial=cda)
@@ -167,16 +196,11 @@ def make_publication_request(data, jwt, jwt_auth, pdf):
 
 def make_request(url,data, jwt, jwt_auth, pdf)->requests.Response:
     s = requests.Session()
-
-    if (settings.BASE_DIR/'client_auth_upload').exists():
-        cert_path=settings.BASE_DIR/'client_auth_upload'
-    elif (settings.BASE_DIR/'client_auth').exists():
-        cert_path=settings.BASE_DIR/'client_auth'
-    else:
+    cert_paths=get_certs_path(CertType.AUTH)
+    if not cert_paths:
         raise CertificateNotFoundException
-
-    s.cert = str(cert_path.resolve())
-    #print(f"BUILDING REQUESTS SESSION WITH CERT:{cert_path}")
+    s.cert = str(cert_paths[0].resolve())
+    #print(f"BUILDING REQUESTS SESSION WITH CERT:{s.cert}")
     s.headers.update({"Accept": "application/json"})
     headers = {"Authorization": "Bearer "+jwt_auth, "FSE-JWT-Signature": jwt}
 
@@ -226,11 +250,11 @@ def validation(jwt_generator,request: HttpRequest):
     jwt_auth_data = None
     request_data = None
     if request.method == 'POST':
-        data=request.POST.copy()
-        data['iss']=[get_issuer()]
-        form = ValidationForm(data)
+        #post_data=request.POST.copy()
+        #post_data.update({'iss':get_cert_cn()})
+        form = ValidationForm(request.POST)
         #form.is_valid()
-        #print(f"###################\nissuer: {get_issuer()} data: {data['iss']} form.cleaned_data: {form.cleaned_data['iss']} form: {form.fields['iss']}\n######################")
+        #print(f"###################\nform_valid:{form.is_valid()}\nissuer: {get_cert_cn()} data: {post_data.getlist('iss')} form.cleaned_data: {form.cleaned_data['iss']} form: {form.fields['iss']}\n######################")
         if form.is_valid():
             #save data in session
             save_data_in_session(request,form)
@@ -252,10 +276,10 @@ def validation(jwt_generator,request: HttpRequest):
         #load session data
         session_data=load_session_data(request,ValidationForm.declared_fields.keys())
         if session_data:
-            session_data['iss']=get_issuer()
+            session_data['iss']=get_cert_cn()
             form = ValidationForm(initial=session_data)
         else:
-            form = ValidationForm(initial={'iss':get_issuer()})
+            form = ValidationForm(initial={'iss':get_cert_cn()})
     return render(request, 'validation.html',
                   context={'form': form, 
                            'jwt': jwt,
@@ -276,9 +300,9 @@ def publication(jwt_generator,request: HttpRequest):
     jwt_auth_data = None
     request_data = None
     if request.method == 'POST':
-        data=request.POST.copy()
-        data['iss']=[get_issuer()]
-        form = PublicationForm(data)
+        #post_data=request.POST.copy()
+        #post_data.update({'iss':get_cert_cn()})
+        form = PublicationForm(request.POST)
         if form.is_valid():
             for k in form.fields.keys():
                 request.session[k]=str(form.cleaned_data[k]) if type(form.cleaned_data[k]) == datetime else form.cleaned_data[k]
@@ -299,10 +323,10 @@ def publication(jwt_generator,request: HttpRequest):
     else:
         session_data=load_session_data(request,PublicationForm.declared_fields.keys())
         if session_data:
-            session_data['iss']=get_issuer()
+            session_data['iss']=get_cert_cn()
             form = PublicationForm(initial=session_data)
         else:
-            form = PublicationForm(initial={"iss":get_issuer()})
+            form = PublicationForm(initial={"iss":get_cert_cn()})
     return render(request, 'publication.html',
                   context={'form': form, 
                            'jwt': jwt,
@@ -316,6 +340,8 @@ def publication(jwt_generator,request: HttpRequest):
 
 def certificate_view(request:HttpRequest):
     form=None
+    auth_cn=None
+    sign_cn=None
     if request.method=='POST':
         form=CertForm(request.POST)
         if form.is_valid():
@@ -325,9 +351,9 @@ def certificate_view(request:HttpRequest):
             (settings.BASE_DIR/'client_auth_upload').write_text(client_auth,encoding='utf8')
             try:
                 #check if certs are good
-                jwk.JWK.from_pem((settings.BASE_DIR/'client_sign_upload').read_bytes())
-                jwk.JWK.from_pem((settings.BASE_DIR/'client_auth_upload').read_bytes())
-            except ValueError:
+                sign_cn=get_cert_cn(settings.BASE_DIR/'client_sign_upload')
+                auth_cn=get_cert_cn(settings.BASE_DIR/'client_auth_upload')
+            except :
                 #delete them if are not...
                 (settings.BASE_DIR/'client_sign_upload').unlink()
                 (settings.BASE_DIR/'client_auth_upload').unlink()
@@ -337,9 +363,13 @@ def certificate_view(request:HttpRequest):
             "client_sign": (settings.BASE_DIR/'client_sign_upload').read_text(encoding='utf8'),
             "client_auth": (settings.BASE_DIR/'client_auth_upload').read_text(encoding='utf8')
         })
+        sign_cn=get_cert_cn(settings.BASE_DIR/'client_sign_upload')
+        auth_cn=get_cert_cn(settings.BASE_DIR/'client_auth_upload')
     elif not form:
         form=CertForm()
     return render(request,'cert_upload.html',context={
+        'auth_cn':auth_cn,
+        'sign_cn':sign_cn,
         'form':form,
         'BASE_URL':settings.GTW_BASE_URL
     })
