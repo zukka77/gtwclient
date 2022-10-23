@@ -79,7 +79,9 @@ def build_jwt_generator()->JwtGenerator:
             return JwtGenerator(key, cert)
         except:
             pass
-    raise CertificateNotFoundException("Certificate not found")
+    if not file_paths:
+        raise CertificateNotFoundException("Certificate not found")
+    raise CertificateNotValidException(f"certs: {file_paths} is/are not valid")
 
 
 def use_jwt_generator(func):

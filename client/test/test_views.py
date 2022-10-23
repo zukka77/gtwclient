@@ -141,11 +141,14 @@ def test_get_certs_path_not_valid_cert_type():
         with pytest.raises(ValueError):
                 get_certs_path("test")
 
-def test_get_cert_cn_exceptions(mocker):
+def test_cert_not_valid_exceptions(mocker):
         with pytest.raises(CertificateNotValidException):
                 get_cert_cn(Path(str(uuid4())))
+        mocker.patch("client.views.get_certs_path").return_value=[Path(str(uuid4()))]
+        with pytest.raises(CertificateNotValidException):
+                build_jwt_generator()
 
-def test_cert_not_found(mocker):
+def test_cert_not_found_exceptions(mocker):
         mocker.patch("client.views.get_certs_path").return_value=[]
         with pytest.raises(CertificateNotFoundException):
                 build_jwt_generator()
@@ -153,3 +156,11 @@ def test_cert_not_found(mocker):
                 get_cert_cn()
         with pytest.raises(CertificateNotFoundException):
                 make_request(data=None,jwt_auth=None,jwt=None,pdf=None,url=None)
+
+@pytest.mark.parametrize("url,form_class,data",_POST_DATA,ids=_POST_IDS)
+@pytest.mark.django_db
+def test_ssl_error(mocker,client,url,data,form_class):
+        from requests.exceptions import SSLError
+        mocker.patch("client.views.make_request").side_effect=SSLError
+        response=client.post(url,data=data)
+        assert response.context['response']['status_code']==400
