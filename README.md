@@ -1,8 +1,8 @@
-# FSE GTW Web Client
+# (Unofficial) FSE GTW Web Client
 Questo semplice client web, realizzato con [Django](https://www.djangoproject.com/), è utile per sperimentare velocemente le chiamate verso il Gateway FSE 2.0.  
 Al momento è possibile effettuare le chiamate di **validazione** che esegue un controllo formale sul file CDA inviato e di **pubblicazione**.
 
-*Questo **non** è un progetto ufficiale del progetto FSE 2.0*
+*Questo **non** è un software ufficiale del progetto FSE 2.0*
 
 **NB** attualmente il servizio di pubblicazione è un mock up che esegue solo alcuni controlli, tra questi il fatto che il CDA sia stato precedentemente validato. Pertanto **è necessario validare il CDA prima di poterlo pubblicare**
 
