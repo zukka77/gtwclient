@@ -75,7 +75,6 @@ def build_jwt_generator()->JwtGenerator:
             certlines = cert.splitlines()
             cert = '\n'.join(
                 certlines[certlines.index('-----BEGIN CERTIFICATE-----'):])
-            #print(f"GWTGenerator created with cert: {file_path}")
             return JwtGenerator(key, cert)
         except:
             pass
@@ -204,7 +203,6 @@ def make_request(url,data, jwt, jwt_auth, pdf)->requests.Response:
     if not cert_paths:
         raise CertificateNotFoundException
     s.cert = str(cert_paths[0].resolve())
-    #print(f"BUILDING REQUESTS SESSION WITH CERT:{s.cert}")
     s.headers.update({"Accept": "application/json"})
     headers = {"Authorization": "Bearer "+jwt_auth, "FSE-JWT-Signature": jwt}
 
@@ -254,11 +252,7 @@ def validation(jwt_generator,request: HttpRequest):
     jwt_auth_data = None
     request_data = None
     if request.method == 'POST':
-        #post_data=request.POST.copy()
-        #post_data.update({'iss':get_cert_cn()})
         form = ValidationForm(request.POST)
-        #form.is_valid()
-        #print(f"###################\nform_valid:{form.is_valid()}\nissuer: {get_cert_cn()} data: {post_data.getlist('iss')} form.cleaned_data: {form.cleaned_data['iss']} form: {form.fields['iss']}\n######################")
         if form.is_valid():
             #save data in session
             save_data_in_session(request,form)
@@ -307,8 +301,6 @@ def publication(jwt_generator,request: HttpRequest):
     jwt_auth_data = None
     request_data = None
     if request.method == 'POST':
-        #post_data=request.POST.copy()
-        #post_data.update({'iss':get_cert_cn()})
         form = PublicationForm(request.POST)
         if form.is_valid():
             for k in form.fields.keys():
