@@ -1,6 +1,7 @@
 from datetime import datetime
 from doctest import ELLIPSIS_MARKER
 from pprint import pprint
+from requests.exceptions import SSLError
 from uuid import uuid4
 from django.shortcuts import render
 from django import forms
@@ -19,6 +20,7 @@ import functools
 import hashlib
 from jwcrypto import jwk
 from enum import Enum, auto
+
 
 class CertificateErrorException(Exception):
     pass
@@ -267,8 +269,11 @@ def validation(jwt_generator,request: HttpRequest):
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             pdf = create_pdf_with_attachment(form.cleaned_data['cda'])
             request_data = data
-            res = make_validation_request(data, jwt, jwt_auth, pdf)
-            response = {'request_headers':dict(res.request.headers),'status_code':res.status_code,'text':res.text}
+            try:
+                res = make_validation_request(data, jwt, jwt_auth, pdf)
+                response = {'request_headers':dict(res.request.headers),'status_code':res.status_code,'text':res.text}
+            except SSLError:
+                response = {'request_headers':{},'status_code':400,'text':'Errore SSL controllare che si stia usando il certificato giusto.'}
             jwt_data= jwt_generator.verify_token(jwt)
             jwt_auth_data= jwt_generator.verify_token(jwt_auth)
             
@@ -316,8 +321,11 @@ def publication(jwt_generator,request: HttpRequest):
             jwt_data.attachment_hash=pdf_hash
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             request_data=data
-            res = make_publication_request(data, jwt, jwt_auth, pdf)
-            response = {'request_headers':dict(res.request.headers),'status_code':res.status_code,'text':res.text}
+            try:
+                res = make_publication_request(data, jwt, jwt_auth, pdf)
+                response = {'request_headers':dict(res.request.headers),'status_code':res.status_code,'text':res.text}
+            except SSLError:
+                response = {'request_headers':{},'status_code':400,'text':'Errore SSL controllare che si stia usando il certificato giusto.'}
             jwt_data= jwt_generator.verify_token(jwt)
             jwt_auth_data= jwt_generator.verify_token(jwt_auth)
     else:
