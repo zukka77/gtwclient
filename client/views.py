@@ -1,6 +1,4 @@
 from datetime import datetime
-from doctest import ELLIPSIS_MARKER
-from pprint import pprint
 from requests.exceptions import SSLError
 from uuid import uuid4
 from django.shortcuts import render
@@ -12,13 +10,12 @@ from typing import Iterable,List
 import requests
 import json
 from .xml_initial import cda
-from .datasets import ASSETTO_ORGNIZZATIVO_CHOICES, ATTIVITA_CLINICA_CHOICES, REGOLE_DI_ACCESSO_CHOICES, RUOLO_CHOICES, STRUTTURA_CHOICES, TIPO_DOCUMENTO_ALTO_CHOICES
+from .datasets import ASSETTO_ORGNIZZATIVO_CHOICES, ATTIVITA_CLINICA_CHOICES, RESOURCE_HL7_TYPE_CHOICES, REGOLE_DI_ACCESSO_CHOICES, RUOLO_CHOICES, STRUTTURA_CHOICES, TIPO_DOCUMENTO_ALTO_CHOICES
 from pathlib import Path
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 import functools
 import hashlib
-from jwcrypto import jwk
 from enum import Enum, auto
 
 
@@ -109,7 +106,7 @@ class ValidationForm(forms.Form):
     mode = forms.ChoiceField(choices=[('ATTACHMENT', 'ATTACHMENT')])
     activity = forms.ChoiceField(choices=[('VALIDATION', 'VALIDATION')])
     #PARAMETRI JWT
-    sub = forms.CharField(initial="PROVAX00X00X000Y")
+    sub = forms.CharField(initial="PROVAX00X00X000Y^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     subject_role = forms.ChoiceField(choices=RUOLO_CHOICES)
     purpose_of_use = forms.ChoiceField(choices=[('TREATMENT', 'TREATMENT')])
     iss = forms.CharField()
@@ -120,8 +117,10 @@ class ValidationForm(forms.Form):
         initial="https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1", disabled=True)
     patient_consent = forms.BooleanField(initial=True, disabled=True)
     action_id = forms.ChoiceField(choices=[("CREATE", "CREATE")])
-    resource_hl7_type = forms.CharField(
-        initial="('11502-2^^2.16.840.1.113883.6.1')")
+    #resource_hl7_type = forms.CharField(
+    #    initial="('11502-2^^2.16.840.1.113883.6.1')")
+    resource_hl7_type = forms.ChoiceField(
+        initial="('11502-2^^2.16.840.1.113883.6.1')",choices=RESOURCE_HL7_TYPE_CHOICES)
     person_id = forms.CharField(
         initial="RSSMRA22A01A399Z^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     cda = forms.CharField(widget=forms.Textarea(
@@ -149,7 +148,7 @@ class PublicationForm(forms.Form):
     identificativoSottomissione = forms.CharField(initial=str(uuid4()))
     priorita = forms.BooleanField(required=False)
     # PARAMETRI JWT
-    sub = forms.CharField(initial="PROVAX00X00X000Y")
+    sub = forms.CharField(initial="PROVAX00X00X000Y^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     subject_role = forms.ChoiceField(choices=RUOLO_CHOICES)
     subject_organization = forms.CharField(initial="Regione Emilia-Romagna")
     subject_organization_id = forms.CharField(initial="080")
@@ -160,8 +159,10 @@ class PublicationForm(forms.Form):
         initial="https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1", disabled=True)
     patient_consent = forms.BooleanField(initial=True, disabled=True)
     action_id = forms.ChoiceField(choices=[("CREATE", "CREATE")])
-    resource_hl7_type = forms.CharField(
-        initial="('11502-2^^2.16.840.1.113883.6.1')")
+    #resource_hl7_type = forms.CharField(
+    #    initial="('11502-2^^2.16.840.1.113883.6.1')")
+    resource_hl7_type = forms.ChoiceField(
+        initial="('11502-2^^2.16.840.1.113883.6.1')",choices=RESOURCE_HL7_TYPE_CHOICES)
     person_id = forms.CharField(
         initial="RSSMRA22A01A399Z^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     #REFERTO CDA
@@ -251,6 +252,8 @@ def validation(jwt_generator,request: HttpRequest):
     jwt_data = None
     jwt_auth_data = None
     request_data = None
+    if request.GET.get('clear_session') or request.POST.get('clear_session'):
+        request.session.flush()
     if request.method == 'POST':
         form = ValidationForm(request.POST)
         if form.is_valid():
@@ -276,7 +279,7 @@ def validation(jwt_generator,request: HttpRequest):
     else:
         #load session data
         session_data=load_session_data(request,ValidationForm.declared_fields.keys())
-        if session_data:
+        if session_data and not request.GET.get('no_cache'):
             session_data['iss']=get_cert_cn()
             form = ValidationForm(initial=session_data)
         else:
@@ -300,6 +303,8 @@ def publication(jwt_generator,request: HttpRequest):
     jwt_data = None
     jwt_auth_data = None
     request_data = None
+    if request.GET.get('clear_session') or request.POST.get('clear_session'):
+        request.session.flush()
     if request.method == 'POST':
         form = PublicationForm(request.POST)
         if form.is_valid():
