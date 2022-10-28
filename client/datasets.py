@@ -169,3 +169,14 @@ ATTIVITA_CLINICA_CHOICES=[
 ("ERP","[ERP] Erogazione Prestazione Prenotata"),
 ("Sistema TS","[Sistema TS] Documenti sistema TS" ),
 ]
+
+RESOURCE_HL7_TYPE_CHOICES=[
+    ("('82593-5^^2.16.840.1.113883.6.1')",'82593-5 - Immunization summary report'),
+    ("('11502-2^^2.16.840.1.113883.6.1')",'11502-2 - Referto di laboratorio'),
+    ("('34105-7^^2.16.840.1.113883.6.1')",'34105-7 - Lettera di dimissione ospedaliera'),
+    ("('60591-5^^2.16.840.1.113883.6.1')",'60591-5 - Profilo Sanitario Sintetico'),
+    ("('68604-8^^2.16.840.1.113883.6.1')",'68604-8 - Referto Radiologico'),
+    ("('11488-4^^2.16.840.1.113883.6.1')",'11488-4 - Nota di consulto'),
+    ("('87273-9^^2.16.840.1.113883.6.1')",'87273-9 - Immunization note'),
+    ("('59258-4^^2.16.840.1.113883.6.1')",'59258-4 - Verbale di Pronto Soccorso'),
+]
