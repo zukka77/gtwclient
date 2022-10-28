@@ -73,7 +73,7 @@ _POST_IDS=_GET_IDS=["VALIDATION","PUBLICATION"]
 def test_get(url,client):
     response=client.get(url)
     assert response.status_code==200
-    reponse=client.get(url,{'clear_session':1})
+    response=client.get(url,{'clear_session':1})
     assert response.status_code==200
 
 @pytest.mark.parametrize("url,form_class,data",_POST_DATA,ids=_POST_IDS)
