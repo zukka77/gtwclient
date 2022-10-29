@@ -30,7 +30,7 @@ class JwtGenerator:
   cert:str
   data:JwtData
 
-  def __init__(self,key:bytes,cert:str,client_name:str="ExampleClient1",exp_time_sec=3600):
+  def __init__(self,key:bytes,cert:str,exp_time_sec=3600):
     self.key=jwk.JWK.from_pem(key)
     self.exp_time_sec=exp_time_sec
     
@@ -41,12 +41,12 @@ class JwtGenerator:
     self.headers={
         "alg": "RS256",
         "typ": "JWT",
-        "kid": client_name,
+        
         "x5c": [
           cert
         ]
       }
-  
+    
   @staticmethod
   def load_key(path:str)->bytes:
     with open(path,"rb") as f:
@@ -101,6 +101,5 @@ class JwtGenerator:
     res={
       "header":{k:v.decode('utf8') if type(v)==bytes else v for k,v in t.jose_header.items() },
       "payload":json.loads(t.payload.decode('utf8')),
-     
     }
     return res

@@ -1,9 +1,9 @@
 *.pyc
 db.sqlite3
 __pycache__
-client_auth
+client_auth*
 /static
-client_sign
+client_sign*
 coverage.xml
 .coverage
 htmlcov
