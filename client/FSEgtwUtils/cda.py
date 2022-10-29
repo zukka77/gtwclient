@@ -30,3 +30,10 @@ def get_available_cda()->List[ResultElem]:
         res.append(result_elem)
     _CDA_LIST=res
     return res
+
+def main():
+    #('11502-2^^2.16.840.1.113883.6.1')
+    for c in get_available_cda():
+        print (f"(\"('{c['code']}^^{c['codeSystem']}')\",'{c['code']} - {c['displayName']}'),")
+if __name__=='__main__':
+    main()
