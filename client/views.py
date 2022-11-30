@@ -69,8 +69,8 @@ def get_cert_cn(cert_path: Path = None) -> str:
             crt = x509.load_pem_x509_certificate(cert_path.read_bytes())
             iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
             return iss
-        except:
-            pass
+        except: #nosec
+            pass 
     if not cert_paths:
         raise CertificateNotFoundException("Certificate not found")
     raise CertificateNotValidException(f"certs: {cert_paths} is/are not valid")
@@ -85,8 +85,8 @@ def build_jwt_generator() -> JwtGenerator:
             certlines = cert.splitlines()
             cert = "\n".join(certlines[certlines.index("-----BEGIN CERTIFICATE-----") :])
             return JwtGenerator(key, cert)
-        except:
-            pass
+        except: #nosec
+            pass 
     if not file_paths:
         raise CertificateNotFoundException("Certificate not found")
     raise CertificateNotValidException(f"certs: {file_paths} is/are not valid")
