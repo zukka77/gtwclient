@@ -7,24 +7,23 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Settings',
+            name="Settings",
             fields=[
-                ('name', models.CharField(max_length=255, primary_key=True, serialize=False)),
-                ('value', models.TextField()),
+                ("name", models.CharField(max_length=255, primary_key=True, serialize=False)),
+                ("value", models.TextField()),
             ],
         ),
         migrations.CreateModel(
-            name='X509',
+            name="X509",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255, unique=True)),
-                ('crt', models.TextField()),
-                ('key', models.TextField()),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=255, unique=True)),
+                ("crt", models.TextField()),
+                ("key", models.TextField()),
             ],
         ),
     ]

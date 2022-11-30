@@ -1,4 +1,4 @@
-cda="""<!-- <?xml version="1.0" encoding="UTF-8"?> -->
+cda = """<!-- <?xml version="1.0" encoding="UTF-8"?> -->
 <ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:mif="urn:hl7-org:v3/mif" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:lab="urn:oid:1.3.6.1.4.1.19376.1.3.2" xmlns:sdtc="urn:hl7-org:sdtc">
 	<realmCode code="IT"/>
 	<typeId root="2.16.840.1.113883.1.3" extension="POCD_MT000040UV02"/>
