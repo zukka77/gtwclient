@@ -375,8 +375,8 @@
 											<referenceRange>
 												<observationRange>
 													<value xsi:type="IVL_PQ">
-														<low value=" 0.00" unit="mg/L"/>
-														<high value=" 20.00" unit="mg/L"/>
+														<low value="0.00" unit="mg/L"/>
+														<high value="20.00" unit="mg/L"/>
 													</value>
 													<interpretationCode code="N" codeSystem="2.16.840.1.113883.5.83" codeSystemName="HL7 Observation Interpretation" displayName="Normal"/>
 													<lab:precondition> 
