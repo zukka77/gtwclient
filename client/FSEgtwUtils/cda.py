@@ -26,7 +26,6 @@ def get_available_cda()->List[ResultElem]:
             "code":code.get('code').strip(),
             "codeSystem":code.get('codeSystem').strip(),
             "displayName":code.get('displayName').strip()
-
         }
         res.append(result_elem)
     _CDA_LIST=res
