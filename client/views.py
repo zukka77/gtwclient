@@ -1,4 +1,5 @@
 from datetime import datetime
+from io import BytesIO
 from requests.exceptions import SSLError
 from uuid import uuid4
 from django.shortcuts import render
@@ -213,7 +214,7 @@ def make_publication_request(data, jwt, jwt_auth, pdf):
     return make_request(PUBLICATION_URL, data, jwt, jwt_auth, pdf)
 
 
-def make_request(url, data, jwt, jwt_auth, pdf) -> requests.Response:
+def make_request(url, data, jwt, jwt_auth, pdf: BytesIO) -> requests.Response:
     s = requests.Session()
     cert_paths = get_certs_path(CertType.AUTH)
     if not cert_paths:
@@ -221,13 +222,31 @@ def make_request(url, data, jwt, jwt_auth, pdf) -> requests.Response:
     s.cert = str(cert_paths[0].resolve())
     s.headers.update({"Accept": "application/json"})
     headers = {"Authorization": "Bearer " + jwt_auth, "FSE-JWT-Signature": jwt}
-
-    res = s.post(
+    http_request = requests.Request(
+        "POST",
         url,
         headers=headers,
         files=[("file", ("cda.pdf", pdf, "application/pdf"))],
         data=[("requestBody", json.dumps(data))],
     )
+    http_request = s.prepare_request(http_request)
+    if settings.GTW_DUMP_REQUEST:
+        # dump request and pdf used sent to the gtw
+        with open("last_request.txt", "w", encoding="utf-8") as f:
+            f.write(
+                "{}\n{}\r\n{}\r\n\r\n{}".format(
+                    "-----------START-----------",
+                    http_request.method + " " + http_request.url,
+                    "\r\n".join("{}: {}".format(k, v) for k, v in http_request.headers.items()),
+                    http_request.body,
+                )
+            )
+        with open("last_pdf.pdf", "wb") as f:
+            pdf.seek(0)
+            f.write(pdf.read())
+            pdf.seek(0)
+    res = s.send(http_request)
+
     return res
 
 

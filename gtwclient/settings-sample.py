@@ -16,7 +16,8 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, True),
     SECRET_KEY=(str,"django-insecure-%8hnm3b(k2!r$&p@2iuzte3xick)c!z9*l_di4m7&=_z4c&ae&"),
-    GTW_BASE_URL=(str,"https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway")
+    GTW_BASE_URL=(str,"https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway"),
+    GTW_DUMP_REQUEST=(bool,False)
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,6 +26,8 @@ environ.Env.read_env(BASE_DIR/'.env')
 
 GTW_BASE_URL=env('GTW_BASE_URL')
 
+# dump every request to gtw on last_request.txt and last_pdf.pdf
+GTW_DUMP_REQUEST=env('GTW_DUMP_REQUEST')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
