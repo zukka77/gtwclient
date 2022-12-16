@@ -70,8 +70,8 @@ def get_cert_cn(cert_path: Path = None) -> str:
             crt = x509.load_pem_x509_certificate(cert_path.read_bytes())
             iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
             return iss
-        except: #nosec
-            pass 
+        except:  # nosec
+            pass
     if not cert_paths:
         raise CertificateNotFoundException("Certificate not found")
     raise CertificateNotValidException(f"certs: {cert_paths} is/are not valid")
@@ -86,8 +86,8 @@ def build_jwt_generator() -> JwtGenerator:
             certlines = cert.splitlines()
             cert = "\n".join(certlines[certlines.index("-----BEGIN CERTIFICATE-----") :])
             return JwtGenerator(key, cert)
-        except: #nosec
-            pass 
+        except:  # nosec
+            pass
     if not file_paths:
         raise CertificateNotFoundException("Certificate not found")
     raise CertificateNotValidException(f"certs: {file_paths} is/are not valid")
@@ -137,7 +137,7 @@ class ValidationForm(forms.Form):
     resource_hl7_type = forms.ChoiceField(
         initial="('11502-2^^2.16.840.1.113883.6.1')", choices=RESOURCE_HL7_TYPE_CHOICES
     )
-    person_id = forms.CharField(initial="RSSMRA22A01A399Z^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
+    person_id = forms.CharField(initial="GTWGWY82B42G920M^^^&2.16.840.1.113883.2.9.4.3.2&ISO")
     cda = forms.CharField(widget=forms.Textarea(attrs={"cols": "120", "rows": "30"}), initial=cda)
 
 
