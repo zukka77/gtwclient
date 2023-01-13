@@ -8,6 +8,16 @@ Al momento è possibile effettuare le chiamate di **validazione** che esegue un 
 
 Il file prima dell'invio viene iniettato all'interno di un pdf di test così come richiesto dalle specifiche.  
 
+- [(Unofficial) FSE GTW Web Client](#unofficial-fse-gtw-web-client)
+  - [Certificati](#certificati)
+  - [Configurazione](#configurazione)
+  - [Esecuzione](#esecuzione)
+  - [Esecuzione locale](#esecuzione-locale)
+  - [Esecuzione container](#esecuzione-container)
+    - [Pull immagine](#pull-immagine)
+    - [Build immagine](#build-immagine)
+
+
 ## Certificati
 
 Per poter collegarsi alla piattaforma è necessario avere a disposizione la coppia di certificati x509 di autenticazione e di firma.  
@@ -30,7 +40,7 @@ e specificando la password di importazione.
 
 --- 
 
-# ATTENZIONE
+<font size="5">**ATTENZIONE**</font>
 
 <mark>**Non esporre pubblicamente il servizio**</mark>
 
@@ -41,7 +51,11 @@ e specificando la password di importazione.
 Prima di poter eseguire il programma è **necessario** creare un file `settings.py` all'interno della directory `gtwclient`, è possibile modificare e/o copiare il file `gtwclient/settings-sample.py`  
 
 È possibile valorizzare la variabile d'ambiente `GTW_BASE_URL` per specificare l'url dell'istanza del gateway da puntare, il valore di default punta all'istanza di validazione del Gateway.
-Nel caso di build del container è possibile mettere la variabile nel file `env-container`. 
+
+È possibile valorizzare la variabile `GTW_DUMP_REQUEST` per ottenere il dump dell'ultima richiesta http e dell'ultimo pdf inviato al gateway.
+La richiesta e il file vengono salvati in 2 file: `last_request.txt` e `last_pdf.pdf`
+
+Nel caso di build del container è possibile mettere le variabili nel file `env-container`. 
 
 ## Esecuzione
 
