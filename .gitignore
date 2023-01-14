@@ -8,3 +8,6 @@ coverage.xml
 .coverage
 htmlcov
 .scannerwork
+last_pdf.pdf
+last_request.txt
+certs/

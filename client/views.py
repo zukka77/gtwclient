@@ -368,7 +368,7 @@ def publication(jwt_generator, request: HttpRequest):
             # build requestBody from form, also convert every value to string
             data = {
                 k: str(form.cleaned_data[k])
-                if type(form.cleaned_data[k]) not in (str, int, bool, list)
+                if type(form.cleaned_data[k]) not in (str, int, list)
                 else form.cleaned_data[k]
                 for k in form.get_body_parameters()
                 if form.cleaned_data[k]
