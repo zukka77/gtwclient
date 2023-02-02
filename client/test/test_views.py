@@ -1,3 +1,4 @@
+import os
 from django.urls import reverse, reverse_lazy
 from client.views import (
     get_cert_cn,
@@ -23,6 +24,7 @@ from datetime import datetime
 from pathlib import Path
 import pytest
 import requests
+from django.test import Client
 
 _POST_RETURN_VALUE_TEXT = """
                         {"traceID": "0634d02b639ac7d0",
@@ -203,3 +205,47 @@ def test_ssl_error(mocker, client, url, data, form_class):
     mocker.patch("client.views.make_request").side_effect = SSLError
     response = client.post(url, data=data)
     assert response.context["response"]["status_code"] == 400
+
+
+@pytest.mark.django_db
+@pytest.mark.skipif(not os.environ.get("ONLINE_TEST"), reason="ONLINE_TEST env is not set")
+def test_status(mocker, client: Client):
+    form_class = ValidationForm
+    data = _VALIDATION_DATA
+    url = reverse("client_validation")
+    form = form_class(data)
+    print(form.errors)
+    assert form.is_valid()
+
+    response = client.post(url, data=data)
+    assert response.status_code == 200
+
+    import re
+
+    wii_pattern = re.compile(r"[a-f\.0-9]*\^\^\^\^urn:ihe:iti:xdw:2013:workflowInstanceId")
+    bearer_pattern = re.compile(r'"Authorization": "Bearer\s+([^"]*)')
+    fjs_pattern = re.compile(r'"FSE-JWT-Signature": "([^"]*)')
+    m = wii_pattern.search(response.content.decode("utf8"))
+    assert m != None
+    wii = m.group(0)
+    assert wii != None
+    print(f"WII: {wii}")
+    m = bearer_pattern.search(response.content.decode("utf8"))
+    assert m != None
+    bearer = m.group(1)
+    m = fjs_pattern.search(response.content.decode("utf8"))
+    assert m != None
+    fjs = m.group(1)
+    assert fjs != None
+    from client.views import CertType
+
+    cert_paths = get_certs_path(CertType.AUTH)
+    res = requests.get(
+        settings.GTW_BASE_URL + f"/v1/status/{wii}",
+        headers={"accept": "application/json", "authorization": f"bearer {bearer}", "FSE-JWT-Signature": fjs},
+        cert=str(cert_paths[0].resolve()),
+    )
+    response = res.json()
+    print(res.request.url)
+    print(response)
+    assert res.status_code == 200
