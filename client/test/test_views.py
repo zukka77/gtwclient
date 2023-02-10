@@ -210,10 +210,10 @@ def test_ssl_error(mocker, client, url, data, form_class):
 
 @pytest.mark.django_db
 def test_status_view(mocker, client: Client):
-    mocker.patch("requests.Session.post")
-    type(requests.Session().post().request).headers = mocker.PropertyMock(return_value={})  # NOSONAR
-    type(requests.Session().post()).text = mocker.PropertyMock(return_value="")  # NOSONAR
-    type(requests.Session().post()).status_code = mocker.PropertyMock(return_value=201)  # NOSONAR
+    mocker.patch("requests.Session")
+    type(requests.Session().send().request).headers = mocker.PropertyMock(return_value={})  # NOSONAR
+    type(requests.Session().send()).text = mocker.PropertyMock(return_value="")  # NOSONAR
+    type(requests.Session().send()).status_code = mocker.PropertyMock(return_value=201)  # NOSONAR
     data = {"wii": "wii"}
     res = client.get(reverse("wii_status_view"))
     assert res.status_code == 200
