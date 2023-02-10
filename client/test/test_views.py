@@ -4,6 +4,7 @@ from client.views import (
     get_cert_cn,
     ValidationForm,
     PublicationForm,
+    WiiForm,
     get_certs_path,
     CertificateNotFoundException,
     CertificateNotValidException,
@@ -205,6 +206,26 @@ def test_ssl_error(mocker, client, url, data, form_class):
     mocker.patch("client.views.make_request").side_effect = SSLError
     response = client.post(url, data=data)
     assert response.context["response"]["status_code"] == 400
+
+
+@pytest.mark.django_db
+def test_status_view(mocker, client: Client):
+    mocker.patch("requests.Session.get")
+    type(requests.Session().get()).text = mocker.PropertyMock(return_value="")  # NOSONAR
+    type(requests.Session().get()).status_code = mocker.PropertyMock(return_value=200)  # NOSONAR
+    data = {"wii": "wii"}
+    res = client.get(reverse("wii_status_view"))
+    assert res.status_code == 200
+    form = WiiForm(data)
+    assert form.is_valid()
+    res = client.post(reverse("wii_status_view"), data=data)
+    assert res.status_code == 200
+    session = client.session
+    session["last_wii"] = "last_wii"
+    session.save()
+    res = client.get(reverse("wii_status_view"))
+    assert res.status_code == 200
+    assert res.context["form"]["wii"].value() == "last_wii"
 
 
 @pytest.mark.django_db
