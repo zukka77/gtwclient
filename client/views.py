@@ -314,6 +314,14 @@ def validation(jwt_generator, request: HttpRequest):
                     "status_code": res.status_code,
                     "text": res.text,
                 }
+                wii = None
+                try:
+                    res_data = res.json()
+                    wii = res_data.get("workflowInstanceId")
+                except:
+                    pass
+                if wii:
+                    request.session["last_wii"] = wii
             except SSLError:
                 response = {
                     "request_headers": {},
@@ -385,6 +393,14 @@ def publication(jwt_generator, request: HttpRequest):
                     "status_code": res.status_code,
                     "text": res.text,
                 }
+                wii = None
+                try:
+                    res_data = res.json()
+                    wii = res_data.get("workflowInstanceId")
+                except:
+                    pass
+                if wii:
+                    request.session["last_wii"] = wii
             except SSLError:
                 response = {
                     "request_headers": {},
