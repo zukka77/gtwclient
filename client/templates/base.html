@@ -42,10 +42,13 @@
                                     {%url 'client_validation' as validation_url%}
                                     {%url 'client_publication' as publication_url%}
                                     {%url 'certificate_view' as cert_url%}
+                                    {%url 'wii_status_view' as status_url%}
                                     <li class="nav-item"><a class="nav-link{% if request.path == validation_url %} active{%endif%}" href="{% url 'client_validation' %}"
                                            ><span>Validazione</span></a></li>
                                     <li class="nav-item"><a class="nav-link{% if request.path == publication_url %} active{%endif%}" href="{% url 'client_publication' %}"
                                             ><span>Pubblicazione</span></a></li>
+                                    <li class="nav-item"><a class="nav-link{% if request.path == status_url %} active{%endif%}" href="{% url 'wii_status_view' %}"
+                                                ><span>Stato WII</span></a></li>
                                     <li class="nav-item"><a class="nav-link{% if request.path == cert_url %} active{%endif%}" href="{% url 'certificate_view' %}"
                                         ><span>Caricamento certificati</span></a></li>
                                 </ul>
