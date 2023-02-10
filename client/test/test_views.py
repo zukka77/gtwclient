@@ -213,6 +213,9 @@ def test_status_view(mocker, client: Client):
     mocker.patch("requests.Session.get")
     type(requests.Session().get()).text = mocker.PropertyMock(return_value="")  # NOSONAR
     type(requests.Session().get()).status_code = mocker.PropertyMock(return_value=200)  # NOSONAR
+    mocker.patch("requests.Session.post")
+    type(requests.Session().post()).text = mocker.PropertyMock(return_value="")  # NOSONAR
+    type(requests.Session().post()).status_code = mocker.PropertyMock(return_value=200)  # NOSONAR
     data = {"wii": "wii"}
     res = client.get(reverse("wii_status_view"))
     assert res.status_code == 200
