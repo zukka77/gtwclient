@@ -118,3 +118,7 @@ def test_jwt_generator(test_keys: Keys, file_certs: Certs):
         data = jwt_generator.verify_token(jwt[1])
         assert data["header"]
         assert data["payload"]
+        jwt = jwt_generator.generate_auth_jwt(aud="aud", iss="iss", sub="sub")
+        data = jwt_generator.verify_token(jwt)
+        assert data["header"]
+        assert data["payload"]
