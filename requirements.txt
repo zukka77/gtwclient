@@ -1,5 +1,5 @@
 Django==4.*
-django-crispy-forms
+django-crispy-forms==1.14
 django-environ
 django-ninja
 fpdf
