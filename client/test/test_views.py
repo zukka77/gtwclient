@@ -231,7 +231,7 @@ def test_status_view(mocker, client: Client):
 
 @pytest.mark.django_db
 @pytest.mark.skipif(not os.environ.get("ONLINE_TEST"), reason="ONLINE_TEST env is not set")
-def test_status(mocker, client: Client):
+def test_status(mocker, client: Client):  # pragma: no cover
     form_class = ValidationForm
     data = _VALIDATION_DATA
     url = reverse("client_validation")
