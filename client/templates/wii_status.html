@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% block content %}
+
+<div class="d-flex p-2 flex-column mx-5 my-4">
+    <div class="row">
+        <div class="m-4">
+            {% block header %}
+            <h1>Controllo Stati per workflowInstanceId</h1>
+            {% endblock %}
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {{form|crispy}}
+            <input class="btn btn-primary my-2" type="submit" value="Submit">
+        </form>
+        {%if status_data%}
+        <div>HTTP Status Code: {{status_code}}</div>
+        <div id="app">
+            <highlightjs :code="status" language="json" />
+            {%endif%}
+        </div>
+    </div>
+</div>
+
+{{status_data|json_script:"status_data"}}
+<script lang="js">
+
+    const app = createApp({
+        name: "results",
+        data() {
+            return {
+                status_data: JSON.parse(document.getElementById('status_data').textContent)
+            }
+        },
+        computed:{
+            status(){
+            let data=this.status_data;
+            try{
+                data=JSON.parse(data);
+                data=JSON.stringify(data,null,2);
+                console.log(data);
+                return data;
+            }
+            catch (error){
+                console.log(error)
+                return data;
+            }
+        }
+        }
+    })
+    app.config.compilerOptions.delimiters = ['[[', ']]']
+    app.use(hljsVuePlugin)
+    app.mount('#app')
+</script>
+
+{% endblock %}

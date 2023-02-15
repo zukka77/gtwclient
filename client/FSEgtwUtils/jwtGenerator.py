@@ -87,6 +87,22 @@ class JwtGenerator:
         auth_token.make_signed_token(self.key)
         return (token.serialize(compact=True), auth_token.serialize(compact=True))
 
+    def generate_auth_jwt(self, sub: str, iss: str, aud: str) -> str:
+        nowepoch = int(time.time())
+        claims_auth = {"sub": sub, "iss": iss, "aud": aud}
+        claims_auth.update(
+            {
+                "iat": nowepoch,
+                "nbf": nowepoch,
+                "exp": nowepoch + self.exp_time_sec,
+                "jti": str(uuid.uuid4()),
+            }
+        )
+        claims_auth["iss"] = "auth:" + claims_auth["iss"]
+        auth_token = jwt.JWT(header=self.headers, claims=claims_auth)
+        auth_token.make_signed_token(self.key)
+        return auth_token.serialize(compact=True)
+
     @staticmethod
     def verify_token(token: str) -> VerifyResult:
         t = jws.JWS.from_jose_token(token)

@@ -111,6 +111,10 @@ class CertForm(forms.Form):
     )
 
 
+class WiiForm(forms.Form):
+    wii = forms.CharField(required=True, label="workflowInstanceId")
+
+
 class ValidationForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -204,14 +208,33 @@ class PublicationForm(forms.Form):
         ]
 
 
-def make_validation_request(data, jwt, jwt_auth, pdf):
+def make_validation_request(data, jwt, jwt_auth, pdf) -> requests.Response:
     VALIDATION_URL = settings.GTW_BASE_URL + "/v1/documents/validation"
     return make_request(VALIDATION_URL, data, jwt, jwt_auth, pdf)
 
 
-def make_publication_request(data, jwt, jwt_auth, pdf):
+def make_publication_request(data, jwt, jwt_auth, pdf) -> requests.Response:
     PUBLICATION_URL = settings.GTW_BASE_URL + "/v1/documents"
     return make_request(PUBLICATION_URL, data, jwt, jwt_auth, pdf)
+
+
+def make_status_request(wii: str, jwt_auth) -> requests.Response:
+    STATUS_URL = settings.GTW_BASE_URL + f"/v1/status/{wii}"
+    s = requests.Session()
+    cert_paths = get_certs_path(CertType.AUTH)
+    if not cert_paths:
+        raise CertificateNotFoundException
+    s.cert = str(cert_paths[0].resolve())
+    s.headers.update({"Accept": "application/json"})
+    headers = {"Authorization": "Bearer " + jwt_auth}
+    http_request = requests.Request(
+        "GET",
+        STATUS_URL,
+        headers=headers,
+    )
+    http_request = s.prepare_request(http_request)
+    res = s.send(http_request)
+    return res
 
 
 def make_request(url, data, jwt, jwt_auth, pdf: BytesIO) -> requests.Response:
@@ -284,7 +307,7 @@ def load_session_data(request: HttpRequest, keys: Iterable[str]) -> dict:
 
 ###views
 @use_jwt_generator
-def validation(jwt_generator, request: HttpRequest):
+def validation(jwt_generator: JwtGenerator, request: HttpRequest):
     jwt = None
     response = None
     jwt_auth = None
@@ -314,6 +337,14 @@ def validation(jwt_generator, request: HttpRequest):
                     "status_code": res.status_code,
                     "text": res.text,
                 }
+                wii = None
+                try:
+                    res_data = res.json()
+                    wii = res_data.get("workflowInstanceId")
+                except:
+                    pass
+                if wii:
+                    request.session["last_wii"] = wii
             except SSLError:
                 response = {
                     "request_headers": {},
@@ -348,7 +379,7 @@ def validation(jwt_generator, request: HttpRequest):
 
 
 @use_jwt_generator
-def publication(jwt_generator, request: HttpRequest):
+def publication(jwt_generator: JwtGenerator, request: HttpRequest):
     jwt = None
     response = None
     jwt_auth = None
@@ -385,6 +416,14 @@ def publication(jwt_generator, request: HttpRequest):
                     "status_code": res.status_code,
                     "text": res.text,
                 }
+                wii = None
+                try:
+                    res_data = res.json()
+                    wii = res_data.get("workflowInstanceId")
+                except:
+                    pass
+                if wii:
+                    request.session["last_wii"] = wii
             except SSLError:
                 response = {
                     "request_headers": {},
@@ -455,4 +494,35 @@ def certificate_view(request: HttpRequest):
         request,
         "cert_upload.html",
         context={"auth_cn": auth_cn, "sign_cn": sign_cn, "form": form, "BASE_URL": settings.GTW_BASE_URL},
+    )
+
+
+@use_jwt_generator
+def wii_status_view(jwt_generator: JwtGenerator, request: HttpRequest):
+    wii = request.session.get("last_wii", None)
+    status_data = None
+    status_code = None
+    if request.method == "POST":
+        wii_form = WiiForm(request.POST)
+        if wii_form.is_valid():
+            jwt = jwt_generator.generate_auth_jwt(
+                sub="BAO", iss=get_cert_cn(), aud="https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1"
+            )
+            res = make_status_request(wii_form.cleaned_data["wii"], jwt)
+            status_code = res.status_code
+            status_data = res.text
+    else:
+        if wii:
+            wii_form = WiiForm(initial={"wii": wii})
+        else:
+            wii_form = WiiForm()
+    return render(
+        request,
+        "wii_status.html",
+        context={
+            "status_code": status_code,
+            "status_data": status_data,
+            "BASE_URL": settings.GTW_BASE_URL,
+            "form": wii_form,
+        },
     )

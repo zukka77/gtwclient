@@ -1,8 +1,10 @@
+import os
 from django.urls import reverse, reverse_lazy
 from client.views import (
     get_cert_cn,
     ValidationForm,
     PublicationForm,
+    WiiForm,
     get_certs_path,
     CertificateNotFoundException,
     CertificateNotValidException,
@@ -23,6 +25,7 @@ from datetime import datetime
 from pathlib import Path
 import pytest
 import requests
+from django.test import Client
 
 _POST_RETURN_VALUE_TEXT = """
                         {"traceID": "0634d02b639ac7d0",
@@ -203,3 +206,68 @@ def test_ssl_error(mocker, client, url, data, form_class):
     mocker.patch("client.views.make_request").side_effect = SSLError
     response = client.post(url, data=data)
     assert response.context["response"]["status_code"] == 400
+
+
+@pytest.mark.django_db
+def test_status_view(mocker, client: Client):
+    mocker.patch("requests.Session")
+    type(requests.Session().send().request).headers = mocker.PropertyMock(return_value={})  # NOSONAR
+    type(requests.Session().send()).text = mocker.PropertyMock(return_value="")  # NOSONAR
+    type(requests.Session().send()).status_code = mocker.PropertyMock(return_value=201)  # NOSONAR
+    data = {"wii": "wii"}
+    res = client.get(reverse("wii_status_view"))
+    assert res.status_code == 200
+    form = WiiForm(data)
+    assert form.is_valid()
+    res = client.post(reverse("wii_status_view"), data=data)
+    assert res.status_code == 200
+    session = client.session
+    session["last_wii"] = "last_wii"
+    session.save()
+    res = client.get(reverse("wii_status_view"))
+    assert res.status_code == 200
+    assert res.context["form"]["wii"].value() == "last_wii"
+
+
+@pytest.mark.django_db
+@pytest.mark.skipif(not os.environ.get("ONLINE_TEST"), reason="ONLINE_TEST env is not set")
+def test_status(mocker, client: Client):  # pragma: no cover
+    form_class = ValidationForm
+    data = _VALIDATION_DATA
+    url = reverse("client_validation")
+    form = form_class(data)
+    print(form.errors)
+    assert form.is_valid()
+
+    response = client.post(url, data=data)
+    assert response.status_code == 200
+
+    import re
+
+    wii_pattern = re.compile(r"[a-f\.0-9]*\^\^\^\^urn:ihe:iti:xdw:2013:workflowInstanceId")
+    bearer_pattern = re.compile(r'"Authorization": "Bearer\s+([^"]*)')
+    fjs_pattern = re.compile(r'"FSE-JWT-Signature": "([^"]*)')
+    m = wii_pattern.search(response.content.decode("utf8"))
+    assert m != None
+    wii = m.group(0)
+    assert wii != None
+    print(f"WII: {wii}")
+    m = bearer_pattern.search(response.content.decode("utf8"))
+    assert m != None
+    bearer = m.group(1)
+    m = fjs_pattern.search(response.content.decode("utf8"))
+    assert m != None
+    fjs = m.group(1)
+    assert fjs != None
+    from client.views import CertType
+
+    cert_paths = get_certs_path(CertType.AUTH)
+    res = requests.get(
+        settings.GTW_BASE_URL + f"/v1/status/{wii}",
+        headers={"accept": "application/json", "authorization": f"bearer {bearer}", "FSE-JWT-Signature": fjs},
+        cert=str(cert_paths[0].resolve()),
+    )
+    response = res.json()
+    print(res.request.url)
+    print(response)
+    assert res.status_code == 200
