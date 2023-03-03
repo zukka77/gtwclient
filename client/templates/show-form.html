@@ -10,8 +10,8 @@
             {% endblock %}
         </div>
         <form method="post">
+            <input class="btn btn-primary my-2" type="submit" value="Submit">
             {% csrf_token %}
-           
             {{form|crispy}}
             <input class="btn btn-primary my-2" type="submit" value="Submit">
         </form>
