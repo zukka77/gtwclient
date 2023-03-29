@@ -7,8 +7,8 @@ def create_pdf(text="Test PDF") -> str:
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=15)
-    for l in text.splitlines():
-        pdf.cell(0, 10, l, ln=1)
+    for line in text.splitlines():
+        pdf.cell(0, 10, line, ln=1)
     return pdf.output(dest="S")
 
 
