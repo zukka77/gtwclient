@@ -53,6 +53,7 @@ _VALIDATION_DATA = {
 }
 
 _PUBLICATION_DATA = {
+    "validateAndPublish": False,
     "healthDataFormat": "CDA",
     "mode": "ATTACHMENT",
     "activity": "VALIDATION",
@@ -84,6 +85,9 @@ _PUBLICATION_DATA = {
     "priorita": True,
 }
 
+_VALIDATION_PUBLICATION_DATA = {**_PUBLICATION_DATA}
+_VALIDATION_PUBLICATION_DATA["validateAndPublish"] = True
+
 _POST_DATA = [
     (
         reverse("client_validation"),
@@ -95,8 +99,15 @@ _POST_DATA = [
         PublicationForm,
         _PUBLICATION_DATA,
     ),
+    (
+        reverse("client_publication"),
+        PublicationForm,
+        _VALIDATION_PUBLICATION_DATA,
+    ),
 ]
-_POST_IDS = _GET_IDS = ["VALIDATION", "PUBLICATION"]
+
+_GET_IDS = ["VALIDATION", "PUBLICATION"]
+_POST_IDS = _GET_IDS + ["VALIDATION_PUBLICATION"]
 
 
 @pytest.mark.parametrize("url", [reverse("client_validation"), reverse("client_publication")], ids=_GET_IDS)
