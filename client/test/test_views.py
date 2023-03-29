@@ -53,6 +53,7 @@ _VALIDATION_DATA = {
 }
 
 _PUBLICATION_DATA = {
+    "validateAndPublish": False,
     "healthDataFormat": "CDA",
     "mode": "ATTACHMENT",
     "activity": "VALIDATION",
@@ -84,6 +85,9 @@ _PUBLICATION_DATA = {
     "priorita": True,
 }
 
+_VALIDATION_PUBLICATION_DATA = {**_PUBLICATION_DATA}
+_VALIDATION_PUBLICATION_DATA["validateAndPublish"] = True
+
 _POST_DATA = [
     (
         reverse("client_validation"),
@@ -95,8 +99,15 @@ _POST_DATA = [
         PublicationForm,
         _PUBLICATION_DATA,
     ),
+    (
+        reverse("client_publication"),
+        PublicationForm,
+        _VALIDATION_PUBLICATION_DATA,
+    ),
 ]
-_POST_IDS = _GET_IDS = ["VALIDATION", "PUBLICATION"]
+
+_GET_IDS = ["VALIDATION", "PUBLICATION"]
+_POST_IDS = _GET_IDS + ["VALIDATION_PUBLICATION"]
 
 
 @pytest.mark.parametrize("url", [reverse("client_validation"), reverse("client_publication")], ids=_GET_IDS)
@@ -124,7 +135,7 @@ def test_post(mocker, client, url, form_class, data):
     # Test invalid form
     data = {"test": "test"}
     form = form_class(data)
-    assert form.is_valid() == False
+    assert form.is_valid() is False
     response = client.post((url), data=data)
 
     assert response.status_code == 200
@@ -248,17 +259,17 @@ def test_status(mocker, client: Client):  # pragma: no cover
     bearer_pattern = re.compile(r'"Authorization": "Bearer\s+([^"]*)')
     fjs_pattern = re.compile(r'"FSE-JWT-Signature": "([^"]*)')
     m = wii_pattern.search(response.content.decode("utf8"))
-    assert m != None
+    assert m is not None
     wii = m.group(0)
-    assert wii != None
+    assert wii is not None
     print(f"WII: {wii}")
     m = bearer_pattern.search(response.content.decode("utf8"))
-    assert m != None
+    assert m is not None
     bearer = m.group(1)
     m = fjs_pattern.search(response.content.decode("utf8"))
-    assert m != None
+    assert m is not None
     fjs = m.group(1)
-    assert fjs != None
+    assert fjs is not None
     from client.views import CertType
 
     cert_paths = get_certs_path(CertType.AUTH)

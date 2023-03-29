@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.x509.oid import NameOID
 import datetime
 from tempfile import NamedTemporaryFile
-from pytest import fixture, mark
+from pytest import fixture
 from typing import NamedTuple
 
 
