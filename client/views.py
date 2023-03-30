@@ -151,6 +151,8 @@ class PublicationForm(forms.Form):
         self.fields["iss"].widget.attrs["readonly"] = True
         self.fields["iss"].initial = get_cert_cn()
 
+    # Validazione contestuale alla pubblicazione
+    validateAndPublish = forms.BooleanField(required=False, initial=False, label="Validazione contestuale")
     # PARAMETRY BODY
     workflowInstanceId = forms.CharField(required=False)
     healthDataFormat = forms.ChoiceField(choices=[("CDA", "CDA")])
@@ -216,6 +218,11 @@ def make_validation_request(data, jwt, jwt_auth, pdf) -> requests.Response:
 def make_publication_request(data, jwt, jwt_auth, pdf) -> requests.Response:
     PUBLICATION_URL = settings.GTW_BASE_URL + "/v1/documents"
     return make_request(PUBLICATION_URL, data, jwt, jwt_auth, pdf)
+
+
+def make_validate_and_publish_request(data, jwt, jwt_auth, pdf) -> requests.Response:
+    VALIDATE_AND_PUBLISH_URL = settings.GTW_BASE_URL + "/v1/documents/validate-and-create"
+    return make_request(VALIDATE_AND_PUBLISH_URL, data, jwt, jwt_auth, pdf)
 
 
 def make_status_request(wii: str, jwt_auth) -> requests.Response:
@@ -410,7 +417,10 @@ def publication(jwt_generator: JwtGenerator, request: HttpRequest):
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
             request_data = data
             try:
-                res = make_publication_request(data, jwt, jwt_auth, pdf)
+                if form.cleaned_data["validateAndPublish"]:
+                    res = make_validate_and_publish_request(data, jwt, jwt_auth, pdf)
+                else:
+                    res = make_publication_request(data, jwt, jwt_auth, pdf)
                 response = {
                     "request_headers": dict(res.request.headers),
                     "status_code": res.status_code,

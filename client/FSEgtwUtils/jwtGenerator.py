@@ -3,7 +3,7 @@ import dataclasses
 import uuid
 import time
 import json
-from typing import Tuple, Dict, TypedDict
+from typing import Tuple, TypedDict
 
 
 @dataclasses.dataclass
