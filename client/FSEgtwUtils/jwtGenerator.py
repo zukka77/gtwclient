@@ -22,6 +22,9 @@ class JwtData:
     person_id: str
     attachment_hash: str = ""
     jti: str = ""
+    subject_application_id: str = "gtw-web-client"
+    subject_application_vendor: str = "zukka"
+    subject_application_version: str = "1.0"
 
 
 class VerifyResult(TypedDict):
