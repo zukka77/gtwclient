@@ -1,4 +1,4 @@
-FROM docker.io/python:3 as base
+FROM docker.io/python:3 AS base
 RUN python -m venv /venv
 RUN /venv/bin/pip install -U pip --no-cache-dir
 RUN /venv/bin/pip install wheel --no-cache-dir

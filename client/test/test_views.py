@@ -33,6 +33,7 @@ _POST_RETURN_VALUE_TEXT = """
                          "workflowInstanceId": "2.16.840.1.113883.2.9.2.120.4.4.97bb3fc5bee3032679f4f07419e04af6375baafa17024527a98ede920c6812ed.6c60c58408^^^^urn:ihe:iti:xdw:2013:workflowInstanceId"
                         }
                      """
+
 _VALIDATION_DATA = {
     "healthDataFormat": "CDA",
     "mode": "ATTACHMENT",
