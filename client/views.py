@@ -5,9 +5,9 @@ from uuid import uuid4
 from django.shortcuts import render
 from django import forms
 from django.http import HttpRequest
-from .FSEgtwUtils import create_pdf_with_attachment, JwtGenerator, JwtData
+from .FSEgtwUtils import create_pdf_with_attachment, sign_pdf, JwtGenerator, JwtData
 from django.conf import settings
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 import requests
 import json
 from .xml_initial import cda
@@ -60,7 +60,7 @@ def get_certs_path(cert: CertType) -> List[Path]:
     raise ValueError(f"{cert} is not a valid CertType")
 
 
-def get_cert_cn(cert_path: Path = None) -> str:
+def get_cert_cn(cert_path: Optional[Path] = None) -> str:
     if cert_path:
         cert_paths = [cert_path]
     else:
@@ -69,7 +69,7 @@ def get_cert_cn(cert_path: Path = None) -> str:
         try:
             crt = x509.load_pem_x509_certificate(cert_path.read_bytes())
             iss = crt.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-            return iss
+            return str(iss)
         except:  # nosec
             pass
     if not cert_paths:
@@ -77,14 +77,19 @@ def get_cert_cn(cert_path: Path = None) -> str:
     raise CertificateNotValidException(f"certs: {cert_paths} is/are not valid")
 
 
+def split_key_cert(file_path: Path) -> tuple[bytes, str]:
+    key = file_path.read_bytes()
+    cert = file_path.read_text()
+    certlines = cert.splitlines()
+    cert = "\n".join(certlines[certlines.index("-----BEGIN CERTIFICATE-----") :])
+    return (key, cert)
+
+
 def build_jwt_generator() -> JwtGenerator:
     file_paths = get_certs_path(CertType.SIGN)
     for file_path in file_paths:
         try:
-            key = file_path.read_bytes()
-            cert = file_path.read_text()
-            certlines = cert.splitlines()
-            cert = "\n".join(certlines[certlines.index("-----BEGIN CERTIFICATE-----") :])
+            key, cert = split_key_cert(file_path)
             return JwtGenerator(key, cert)
         except:  # nosec
             pass
@@ -266,7 +271,7 @@ def make_request(url, data, jwt, jwt_auth, pdf: BytesIO) -> requests.Response:
             f.write(
                 "{}\n{}\r\n{}\r\n\r\n{}".format(
                     "-----------START-----------",
-                    http_request.method + " " + http_request.url,
+                    str(http_request.method) + " " + str(http_request.url),
                     "\r\n".join("{}: {}".format(k, v) for k, v in http_request.headers.items()),
                     http_request.body,
                 )
@@ -412,6 +417,11 @@ def publication(jwt_generator: JwtGenerator, request: HttpRequest):
                 if form.cleaned_data[k]
             }
             pdf = create_pdf_with_attachment(form.cleaned_data["cda"])
+            # sign pdf
+            paths = get_certs_path(CertType.SIGN)
+            (key, cert) = split_key_cert(paths[0])
+            pdf_signed = sign_pdf(cert, key.decode("utf-8"), pdf)
+            pdf = pdf_signed
             pdf_hash = hashlib.sha256(pdf.getvalue()).hexdigest()
             jwt_data.attachment_hash = pdf_hash
             jwt, jwt_auth = jwt_generator.generate_validation_jwt(jwt_data)
