@@ -215,17 +215,17 @@ class PublicationForm(forms.Form):
         ]
 
 
-def make_validation_request(data, jwt, jwt_auth, pdf) -> requests.Response:
+def make_validation_request(data: dict, jwt: str, jwt_auth: str, pdf: BytesIO) -> requests.Response:
     VALIDATION_URL = settings.GTW_BASE_URL + "/v1/documents/validation"
     return make_request(VALIDATION_URL, data, jwt, jwt_auth, pdf)
 
 
-def make_publication_request(data, jwt, jwt_auth, pdf) -> requests.Response:
+def make_publication_request(data: dict, jwt: str, jwt_auth: str, pdf: BytesIO) -> requests.Response:
     PUBLICATION_URL = settings.GTW_BASE_URL + "/v1/documents"
     return make_request(PUBLICATION_URL, data, jwt, jwt_auth, pdf)
 
 
-def make_validate_and_publish_request(data, jwt, jwt_auth, pdf) -> requests.Response:
+def make_validate_and_publish_request(data: dict, jwt: str, jwt_auth: str, pdf: BytesIO) -> requests.Response:
     VALIDATE_AND_PUBLISH_URL = settings.GTW_BASE_URL + "/v1/documents/validate-and-create"
     return make_request(VALIDATE_AND_PUBLISH_URL, data, jwt, jwt_auth, pdf)
 
@@ -249,7 +249,7 @@ def make_status_request(wii: str, jwt_auth) -> requests.Response:
     return res
 
 
-def make_request(url, data, jwt, jwt_auth, pdf: BytesIO) -> requests.Response:
+def make_request(url: str, data: dict, jwt: str, jwt_auth: str, pdf: BytesIO) -> requests.Response:
     s = requests.Session()
     cert_paths = get_certs_path(CertType.AUTH)
     if not cert_paths:
