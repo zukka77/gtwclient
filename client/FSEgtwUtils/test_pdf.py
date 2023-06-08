@@ -129,7 +129,7 @@ def test_cert(hostname="localhost") -> tuple[str, str, str]:
 
 def test_create_pdf():
     pdf = create_pdf()
-    assert pdf.startswith(_PDF_STRING)
+    assert pdf.startswith(_PDF_STRING.encode("latin1"))
 
 
 def test_create_pdf_with_attachment():
