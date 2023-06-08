@@ -4,8 +4,9 @@ crispy-bootstrap5
 django-environ
 django-ninja
 fpdf
-jwcrypto
 pikepdf
+pyHanko
+jwcrypto
 requests
 whitenoise
 gunicorn
