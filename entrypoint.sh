@@ -56,5 +56,5 @@ if [  $RES -ne 0 ];then
     su  app -c "/venv/bin/python ./manage.py ensure_superuser --username $USER --password $PASSWORD"
 fi
 
-exec su  app -c '/venv/bin/gunicorn -b 0.0.0.0:4000 -w4  --access-logfile - --error-logfile - -t16 gtwclient.wsgi'
+exec su  app -c '/venv/bin/gunicorn -b 0.0.0.0:4000 -w4 --threads 16 --access-logfile - --error-logfile - -t300 gtwclient.wsgi'
 
